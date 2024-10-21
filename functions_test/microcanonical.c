@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include "../include/functions.h"
 
@@ -28,7 +29,7 @@ int main(void) {
     }
     int is_equal = 0;
     for (i=0; i<DIM; i++) {
-    	if (abs(s[i] - s_result[i])>1e-15) { // NB: pay attetion to == with doubles!
+    	if (fabs(s[i] - s_result[i])>1e-15) { // NB: pay attetion to == with doubles!
 	    fprintf(stdout, "Error in first test!\n");
 	    is_equal = 2;
 	    break;

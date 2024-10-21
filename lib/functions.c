@@ -36,3 +36,20 @@ int microcanonical(double *s, double *S, int len_s) {
     }
 }
 
+int normalization(double * r, int len_r) {
+    int i;
+    double mod_r = pow(scalar_product(r, r, len_r), 0.5);
+
+    for (i=0; i<len_r; i++) {
+        r[i] = r[i] / mod_r;
+    }
+
+    mod_r = pow(scalar_product(r, r, len_r), 0.5);
+    if (fabs(mod_r-1)<1e-15) {
+        return EXIT_SUCCESS;
+    } else {
+        fprintf(stderr, "Renormalization of vector failed!\n");
+        return EXIT_FAILURE;
+    }
+}
+
