@@ -24,19 +24,20 @@ double scalar_product(double * x, double * y, int dim) {
 
 int main(void) {
     double x[DIM], y[DIM];
-    double scalar_prod;
+    double scalar_prod_f, scalar_prod_result = 0;
     int i;
 
     for (i=0; i<DIM; i++) {
 	x[i] = 1.0;
         y[i] = 2.0;
+	scalar_prod_result += x[i]*y[i];
     }
 
-    fprintf(stdout, "Scalar product between:");
+    fprintf(stdout, "Scalar product between:\n");
     print_vector(x, DIM);
     print_vector(y, DIM);
-    scalar_prod = scalar_product(x, y, DIM);
-    fprintf(stdout, "scalar product = %lf\n", scalar_prod);
-
+    scalar_prod_f = scalar_product(x, y, DIM);
+    fprintf(stdout, "Scalar product from function = %lf\n", scalar_prod_f);
+    fprintf(stdout, "Real result: %lf\n", scalar_prod_result);
     return EXIT_SUCCESS;
 }

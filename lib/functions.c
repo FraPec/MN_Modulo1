@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <math.h>
 #include <stdlib.h>
 
 int print_vector(double * x, int len_x) {
     int i;
     for (i=0; i<len_x; i++) {
-        fprintf(stdout, "%lf ", x[i]);
+        fprintf(stdout, "%.14lf ", x[i]);
     }
     fprintf(stdout, "\n");
     return EXIT_SUCCESS;
@@ -24,7 +25,7 @@ int microcanonical(double *s, double *S, int len_s) {
     int i;
 
     sq_mod_S = scalar_product(S, S, len_s);
-    if (sq_mod_S<1e-13) {
+    if (pow(sq_mod_S, 0.5)<1e-13) { 
         return EXIT_FAILURE;
     } else {
 	sS_scal_prod = scalar_product(s, S, len_s);
