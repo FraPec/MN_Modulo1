@@ -24,8 +24,8 @@ int microcanonical(double *s, double *S, int len_s) {
     double sq_mod_S, sS_scal_prod;
     int i;
 
-    sq_mod_S = scalar_product(S, S, len_s);
-    if (pow(sq_mod_S, 0.5)<1e-13) { 
+    sq_mod_S = scalar_product(S, S, len_s); 
+    if (sqrt(sq_mod_S)<1e-13) {
         return EXIT_FAILURE;
     } else {
 	sS_scal_prod = scalar_product(s, S, len_s);
@@ -36,16 +36,18 @@ int microcanonical(double *s, double *S, int len_s) {
     }
 }
 
-int normalization(double * r, int len_r) {
+int normalization(double * r, int len_r) { 
+// How many normalizations needed during a simulation? 
+
     int i;
-    double mod_r = pow(scalar_product(r, r, len_r), 0.5);
+    double mod_r = sqrt(scalar_product(r, r, len_r));
 
     for (i=0; i<len_r; i++) {
         r[i] = r[i] / mod_r;
     }
 
-    mod_r = pow(scalar_product(r, r, len_r), 0.5);
-    if (fabs(mod_r-1)<1e-15) {
+    mod_r = sqrt(scalar_product(r, r, len_r));
+    if (fabs(mod_r-1.0)<1e-15) {
         return EXIT_SUCCESS;
     } else {
         fprintf(stderr, "Renormalization of vector failed!\n");
