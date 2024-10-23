@@ -57,7 +57,7 @@ int allocate(DoubleVector2D ****lattice, int lattice_side) {
                 for (l=0; l<j; l++) {
                         free((*lattice)[i][l]);
                     }
-                free((*lattice)[i])                
+                free((*lattice)[i]);         
                 
                 // Deallocation of (i x lattice_side) pointers to 2dVector
                 for (k=0; k<i; k++) {
@@ -77,7 +77,22 @@ int allocate(DoubleVector2D ****lattice, int lattice_side) {
 
 
 int main() {
-    2D_double_vector *** lattice;
-    
+    DoubleVector2D ***lattice;
+
+    // Allocation and check if all went well
+    if (allocate(&lattice, L) == EXIT_FAILURE) {
+        return EXIT_FAILURE;
+    }
+
+    // Setting all value
+    lattice[0][0][0].sx = 1.0;
+    lattice[0][0][0].sy = 2.0;
+
+    printf("Value of lattice[0][0][0]: sx = %.2f, sy = %.2f\n", lattice[0][0][0].sx, lattice[0][0][0].sy);
+
+    // Free the lattice
+    free_lattice(lattice, L);
+
     return EXIT_SUCCESS;
 }
+
