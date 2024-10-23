@@ -1,12 +1,10 @@
 #ifndef FUNCTIONS
 #define FUNCTIONS
 
-
 typedef struct {
     double sx;
     double sy;
 } DoubleVector2D;
-
 
 int print_vector(double * x, int len_x);
 double scalar_product(double * x, double * y, int dim);

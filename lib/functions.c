@@ -3,8 +3,6 @@
 #include <stdlib.h>
 #include "../include/functions.h"
 
-
-
 int print_vector(double * x, int len_x) {
     int i;
     for (i=0; i<len_x; i++) {
@@ -58,7 +56,6 @@ int normalization(double * r, int len_r) {
     }
 }
 
-
 void free_lattice(DoubleVector2D ***lattice, int lattice_side) {
     int i, j;
     for (i=0; i<lattice_side; i++) {
@@ -69,7 +66,6 @@ void free_lattice(DoubleVector2D ***lattice, int lattice_side) {
     }
     free(lattice);
 }
-
 
 int allocate(DoubleVector2D ****lattice, int lattice_side) {
     int i, j, k, l;
