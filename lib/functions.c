@@ -33,28 +33,26 @@ int microcanonical(DoubleVector2D *s, DoubleVector2D *S) {
         s->sy = 2 * S->sy * sS_scal_prod / sq_mod_S - s->sy;
  	return EXIT_SUCCESS;
      }
- }
+}
 
 
-// NORMALIZATION E' DA RISCRIVERE
-// int normalization(double * r, int len_r) {
-// // How many normalizations needed during a simulation?
-//
-//     int i;
-//     double mod_r = sqrt(scalar_product(r, r, len_r));
-//
-//     for (i=0; i<len_r; i++) {
-//         r[i] = r[i] / mod_r;
-//     }
-//
-//     mod_r = sqrt(scalar_product(r, r, len_r));
-//     if (fabs(mod_r-1.0)<1e-15) {
-//         return EXIT_SUCCESS;
-//     } else {
-//         fprintf(stderr, "Renormalization of vector failed!\n");
-//         return EXIT_FAILURE;
-//     }
-// }
+int normalization(DoubleVector2D *s) {
+// How many normalizations needed during a simulation?
+
+     int i;
+     double mod_s = sqrt(scalar_product(*s, *s));
+
+     s->sx = s->sx / mod_s;
+     s->sy = s->sy / mod_s;
+
+     mod_s = sqrt(scalar_product(*s, *s));
+     if (fabs(mod_s-1.0)<1e-15) {
+         return EXIT_SUCCESS;
+     } else {
+         fprintf(stderr, "Renormalization of vector failed!\n");
+         return EXIT_FAILURE;
+     }
+}
 
 
 void free_lattice(DoubleVector2D ***lattice, int lattice_side) {
