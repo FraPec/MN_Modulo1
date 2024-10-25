@@ -1,0 +1,46 @@
+# Compiled object files
+*.o
+*.obj
+
+# Compiled dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled static libraries
+*.lib
+*.a
+
+# Executable files
+*.exe
+*.out
+*.app
+
+# Debug files
+*.dSYM/
+*.stackdump
+*.core
+*.elf
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+*~
+
+# Build directory (if you use a common one like 'build')
+build/
+
+# CMake and Makefile output
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+
+# IDE-specific directories and files (optional)
+.vscode/
+.idea/
+*.code-workspace
+*.suo
+*.user
+*.DS_Store
