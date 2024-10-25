@@ -3,24 +3,21 @@
 #include <math.h>
 #include "../include/functions.h"
 
-#define DIM 3
 
-int main(void) {
-    double x[DIM], y[DIM];
-    double scalar_prod_f, scalar_prod_result = 0;
-    int i;
 
-    for (i=0; i<DIM; i++) {
-	x[i] = 1.0;
-        y[i] = 2.0;
-	scalar_prod_result += x[i]*y[i];
-    }
+int main(){
 
-    fprintf(stdout, "Scalar product between:\n");
-    print_vector(x, DIM);
-    print_vector(y, DIM);
-    scalar_prod_f = scalar_product(x, y, DIM);
-    fprintf(stdout, "Scalar product from function = %lf\n", scalar_prod_f);
-    fprintf(stdout, "Real result: %lf\n", scalar_prod_result);
+    DoubleVector2D v1, v2;
+
+    v1.sx = 1.0;
+    v1.sy = 2.0;
+    v2.sx = 7.0;
+    v2.sy = 3.0;
+
+    double scal_p = scalar_product(v1, v2);
+
+    printf("Result: %lf\n", scal_p);
+
+
     return EXIT_SUCCESS;
 }
