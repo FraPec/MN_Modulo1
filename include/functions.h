@@ -6,7 +6,6 @@ typedef struct {
     double sy;
 } DoubleVector2D;
 
-int print_vector(double * x, int len_x);
 double scalar_product(DoubleVector2D s1, DoubleVector2D s2);
 int microcanonical(DoubleVector2D *s, DoubleVector2D *S);
 int normalization(DoubleVector2D *s);

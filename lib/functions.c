@@ -3,16 +3,6 @@
 #include <stdlib.h>
 #include "../include/functions.h"
 
-int print_vector(double * x, int len_x) {
-    int i;
-    for (i=0; i<len_x; i++) {
-        fprintf(stdout, "%.14lf ", x[i]);
-    }
-    fprintf(stdout, "\n");
-    return EXIT_SUCCESS;
-}
-
-
 double scalar_product(DoubleVector2D s1, DoubleVector2D s2){
     double sc = 0.;
     sc = (s1.sx * s2.sx) + (s1.sy * s2.sy);
