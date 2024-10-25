@@ -3,25 +3,29 @@
 #include <stdio.h>
 #include "../include/functions.h"
 
-#define DIM 5
-
 int main() {
-    double r[DIM] = {1.2, 1.3, 12.5, 4.4, 0.03}, mod_r = 0.0;
+    DoubleVector2D * s;
+    s = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
+    s->sx = 123.4; s->sy = 1089.52;
     int i, normalized;
+    double mod_s;
+
     fprintf(stdout, "Vector before normalization:\n");
-    print_vector(r, DIM);
-    
-    mod_r = scalar_product(r, r, DIM);
-    mod_r = pow(mod_r, 0.5);
-    fprintf(stdout, "Modulus of vector before normalization: %lf\n", mod_r);
+    fprintf(stdout, "%lf, %lf\n", s->sx, s->sy);
 
-    normalized = normalization(r, DIM);
-    mod_r = scalar_product(r, r, DIM);
-    mod_r = pow(mod_r, 0.5);
+    mod_s = scalar_product(*s, *s);
+    mod_s = sqrt(mod_s);
+
+    fprintf(stdout, "Modulus of vector before normalization: %lf\n", mod_s);
+
+    normalized = normalization(s);
+    mod_s = scalar_product(*s, *s);
+    mod_s = sqrt(mod_s);
+
     fprintf(stdout, "Vector after normalization:\n");
-    print_vector(r, DIM);
-
-    fprintf(stdout, "Modulus of vector after normalization: %lf\n", mod_r);
+    fprintf(stdout, "%lf, %lf\n", s->sx, s->sy);
+    fprintf(stdout, "Modulus of vector after normalization: %lf\n", mod_s);
+    
     if (normalized==EXIT_SUCCESS) {
         fprintf(stdout, "Test passed, vector has been correctly normalized!\n");
     } else {
