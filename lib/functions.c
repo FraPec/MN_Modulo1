@@ -20,22 +20,20 @@ double scalar_product(DoubleVector2D s1, DoubleVector2D s2){
     return sc;
 }
 
-// MICROCANONICAL E' DA RISCRIVERE
-// int microcanonical(double *s, double *S, int len_s) {
-//     double sq_mod_S, sS_scal_prod;
-//     int i;
-//
-//     sq_mod_S = scalar_product(S, S, len_s);
-//     if (sqrt(sq_mod_S)<1e-13) {
-//         return EXIT_FAILURE;
-//     } else {
-// 	sS_scal_prod = scalar_product(s, S, len_s);
-// 	for (i=0; i<len_s; i++) {
-// 	    s[i] = 2 * S[i] * sS_scal_prod / sq_mod_S - s[i];
-// 	}
-// 	return EXIT_SUCCESS;
-//     }
-// }
+int microcanonical(DoubleVector2D *s, DoubleVector2D *S) {
+     double sq_mod_S, sS_scal_prod;
+     int i;
+
+     sq_mod_S = scalar_product(*S, *S);
+     if (sqrt(sq_mod_S)<1e-13) {
+         return EXIT_FAILURE;
+     } else {
+ 	sS_scal_prod = scalar_product(*s, *S);
+ 	s->sx = 2 * S->sx * sS_scal_prod / sq_mod_S - s->sx;
+        s->sy = 2 * S->sy * sS_scal_prod / sq_mod_S - s->sy;
+ 	return EXIT_SUCCESS;
+     }
+ }
 
 
 // NORMALIZATION E' DA RISCRIVERE

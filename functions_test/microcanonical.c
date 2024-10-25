@@ -4,54 +4,55 @@
 
 #include "../include/functions.h"
 
-#define DIM 2
-
 int main(void) {
-    double s[DIM] = {12.9, 3.5}, S[DIM] = {0.0, 127.97}, s_result[DIM];
+    DoubleVector2D * s, * S, * s_result;
+    s = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
+    S = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
+    s_result = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
+
+    s->sx = 1.5; s->sy = 2.3;
+    S->sx = 0.0; S->sy = 124.2;
+    s_result->sx = -s->sx; s_result->sy = s->sy;
     int i;
-    for (i=0; i<DIM; i++) {
-        s_result[i] = s[i];
-    }
-    s_result[0] = - s_result[0];
 
     fprintf(stdout, "FIRST TEST:\n");
     fprintf(stdout, "Starting vector s:\n");
-    print_vector(s, DIM);
+    fprintf(stdout, "%lf, %lf\n", s->sx, s->sy);
     fprintf(stdout, "Vector S:\n");
-    print_vector(S, DIM);
-    if (microcanonical(s, S, DIM) == EXIT_SUCCESS) {
+    fprintf(stdout, "%lf, %lf\n", S->sx, S->sy);
+    if (microcanonical(s, S) == EXIT_SUCCESS) {
         fprintf(stdout, "New vector s from function:\n");
-        print_vector(s, DIM);
+        fprintf(stdout, "%lf, %lf\n", s->sx, s->sy);
 	fprintf(stdout, "New vector s, real result:\n");
-	print_vector(s_result, DIM);
+        fprintf(stdout, "%lf, %lf\n", s_result->sx, s_result->sy);
     } else {
         fprintf(stderr, "Error in microcanonical function: norm of S is too small.\n");
     }
+
     int is_equal = 0;
-    for (i=0; i<DIM; i++) {
-    	if (fabs(s[i] - s_result[i])>1e-15) { // NB: pay attetion to == with doubles!
-	    fprintf(stdout, "Error in first test!\n");
-	    is_equal = 2;
-	    break;
-	}
+    if ((fabs(s->sx - s_result->sx)>1e-15) & fabs(s->sx - s_result->sx)>1e-15) { // NB: pay attetion to == with doubles!
+        fprintf(stdout, "Error in first test!\n");
+        is_equal = 2;
     }
+
+
     if (is_equal==0) { 
 	fprintf(stdout, "First test passed, the results are equal!\n");
     } else {
         fprintf(stdout, "First test didn't work!\n");
     }
     fprintf(stdout, "\n");
-    
+   
 
-    for (i=0; i<DIM; i++) {
-        S[i] = 1e-14; 
-    }    
+    S->sx = 1e-14; S->sy = 1e-14;
+
     fprintf(stdout, "SECOND TEST:\n");
     fprintf(stdout, "Starting vector s:\n");
-    print_vector(s, DIM);
+    fprintf(stdout, "%lf, %lf\n", s->sx, s->sy);
     fprintf(stdout, "Vector S:\n");
-    print_vector(S, DIM);
-    if (microcanonical(s, S, DIM) == EXIT_SUCCESS) {
+    fprintf(stdout, "%lf, %lf\n", S->sx, S->sy);
+
+    if (microcanonical(s, S) == EXIT_SUCCESS) {
         fprintf(stdout, "Second test didn't work!\n");
     } else {
         fprintf(stderr, "Error in microcanonical function: norm of S is too small.\n");
