@@ -116,3 +116,56 @@ DoubleVector2D ***allocate(int lattice_side) {
     }
     return lattice;  // Return the allocated 3D lattice
 }
+
+DoubleVector2D* magnetization(DoubleVector2D ***lattice, int lattice_side) {
+    DoubleVector2D* m = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
+    int Vol = lattice_side * lattice_side * lattice_side; // faster and more accurate than pow (math.h) for integers!
+    if (m==NULL) {
+        fprintf(stderr, "Failed allocation for vector magnetization, returning NULL!\n");
+        return NULL;
+    }
+    m->sx = 0.0; m->sy = 0.0;
+    int i, j, k;
+
+    for (i=0; i<lattice_side; i++) {
+        for (j=0; j<lattice_side; j++) {
+            for (k=0; k<lattice_side; k++) {
+                m->sx += lattice[i][j][k].sx;
+                m->sy += lattice[i][j][k].sy;
+            }
+        }
+    }
+
+    m->sx /= Vol;
+    m->sy /= Vol;
+
+    return m;
+}
+
+double energy_per_site(DoubleVector2D ***lattice, int lattice_side) {
+    int i, j, k, i_plus, j_plus, k_plus;
+    int Vol = lattice_side * lattice_side * lattice_side;
+    double energy_per_site = 0.0;
+    DoubleVector2D S_nearest; S_nearest.sx = 0.0; S_nearest.sy = 0.0;
+
+    for (i=0; i<lattice_side; i++) {
+        for (j=0; j<lattice_side; j++) {
+            for (k=0; k<lattice_side; k++) {
+                // Periodic boudary conditions
+                // Only sites after the one we are considering are included, to avoid double counting
+                i_plus  = (i + 1) % lattice_side;
+                j_plus  = (j + 1) % lattice_side;
+                k_plus  = (k + 1) % lattice_side;
+
+                S_nearest.sx = lattice[i_plus][j][k].sx + lattice[i][j_plus][k].sx + lattice[i][j][k_plus].sx;
+                S_nearest.sy = lattice[i_plus][j][k].sy + lattice[i][j_plus][k].sy + lattice[i][j][k_plus].sy;
+
+                energy_per_site += - scalar_product(lattice[i][j][k], S_nearest) / (double) Vol;
+            }
+        }
+    }
+
+    return energy_per_site;
+}
+
+
