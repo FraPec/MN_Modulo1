@@ -6,39 +6,13 @@
 
 #define L 5
 
-DoubleVector2D* magnetization(DoubleVector2D ***lattice, int lattice_side) {
-    DoubleVector2D* m = (DoubleVector2D *)malloc(sizeof(DoubleVector2D));
-    int Vol = lattice_side * lattice_side * lattice_side; // faster and more accurate than pow (math.h) for integers!
-    if (m==NULL) {
-        fprintf(stderr, "Failed allocation for vector magnetization, returning NULL!\n");
-	return NULL;
-    }
-    m->sx = 0.0; m->sy = 0.0;
-    int i, j, k;
-    
-    for (i=0; i<lattice_side; i++) {
-        for (j=0; j<lattice_side; j++) {
-            for (k=0; k<lattice_side; k++) {
-                m->sx += lattice[i][j][k].sx;
-                m->sy += lattice[i][j][k].sy;
-            }
-        }
-    }
-
-    m->sx /= Vol;
-    m->sy /= Vol;
-    
-    return m;
-}
-
-
 int main() {
-    DoubleVector2D ***lattice;
+    DoubleVector2D ***lattice = allocate(L);
     double a = 127.32, b = 134.123;
     int i, j, k;
 
     // Allocate lattice
-    if (allocate(&lattice, L) == EXIT_FAILURE) {
+    if (lattice == NULL) {
         return EXIT_FAILURE;
     }
 
