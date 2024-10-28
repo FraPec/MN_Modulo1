@@ -45,65 +45,74 @@ int normalization(DoubleVector2D *s) {
 }
 
 
+
+
+// Function to free the memory of a 3D lattice of DoubleVector2D structures
 void free_lattice(DoubleVector2D ***lattice, int lattice_side) {
     int i, j;
+    // Loop through each level to free memory in reverse order of allocation
     for (i=0; i<lattice_side; i++) {
         for (j=0; j<lattice_side; j++) {
-            free(lattice[i][j]);
+            free(lattice[i][j]); //Free each DoubleVector2D array at the third level
         }
-        free(lattice[i]);
+        free(lattice[i]); //Free each DoubleVector2D* array at the second level
     }
-    free(lattice);
+    free(lattice); //Free the main array of DoubleVector2D**
 }
 
-int allocate(DoubleVector2D ****lattice, int lattice_side) {
-    int i, j, k, l;
 
-    // First level allocation - array of pointers (2D lattice) to array of pointers (3D lattice) to 2dVector
-    *lattice = (DoubleVector2D ***)malloc(lattice_side * sizeof(DoubleVector2D **));
-    if (*lattice==NULL) {
+
+
+
+// Function to allocate a 3D lattice of DoubleVector2D structures
+DoubleVector2D ***allocate(int lattice_side) {
+    DoubleVector2D ***lattice;
+    int i, j, l;
+
+    // First level allocation - array of pointers to arrays of pointers
+    lattice = (DoubleVector2D ***)malloc(lattice_side * sizeof(DoubleVector2D **));
+    if (lattice == NULL) {
         fprintf(stderr, "Error in the allocation of the first level.\n");
-        return EXIT_FAILURE;
+        return NULL;  // Return NULL if the allocation fails
     }
 
-    // Second level allocation - array of pointers (3D lattice) to 2dVector
-    for (i=0; i<lattice_side; i++) {
-        (*lattice)[i] = (DoubleVector2D **)malloc(lattice_side * sizeof(DoubleVector2D *));
-
-        if ((*lattice)[i]==NULL) {
+    // Second level allocation - for each pointer, allocate an array of DoubleVector2D pointers
+    for (i = 0; i < lattice_side; i++) {
+        lattice[i] = (DoubleVector2D **)malloc(lattice_side * sizeof(DoubleVector2D *));
+        if (lattice[i] == NULL) {
             fprintf(stderr, "Error in the allocation of the second level.\n");
-            for (k=0; k<i; k++) {
-                free((*lattice)[k]);
+
+            // Free previously allocated memory in case of failure
+            for (int k = 0; k < i; k++) {
+                free(lattice[k]);
             }
-            free(*lattice);
-	return EXIT_FAILURE;
+            free(lattice);
+            return NULL;  // Return NULL if allocation fails at this level
         }
 
-        // Third level allocation - pointers to 2dVector
-        for (j=0; j<lattice_side; j++) {
-            (*lattice)[i][j] = (DoubleVector2D *)malloc(lattice_side * sizeof(DoubleVector2D));
-            if ((*lattice)[i][j]==NULL) {
+        // Third level allocation - for each DoubleVector2D pointer, allocate the array of structures
+        for (j = 0; j < lattice_side; j++) {
+            lattice[i][j] = (DoubleVector2D *)malloc(lattice_side * sizeof(DoubleVector2D));
+            if (lattice[i][j] == NULL) {
+                fprintf(stderr, "Error in the allocation of the third level.\n");
 
-                fprintf(stderr, "Error in the allocation of the second level.\n");
-
-                // Deallocation of j pointers to 2dVector along the (2D) lattice site identified by i
-                for (l=0; l<j; l++) {
-                        free((*lattice)[i][l]);
-                    }
-                free((*lattice)[i]);
-
-                // Deallocation of (i x lattice_side) pointers to 2dVector
-                for (k=0; k<i; k++) {
-                    for (l=0; l<lattice_side; l++) {
-                        free((*lattice)[k][l]);
-                    }
-                    free((*lattice)[k]);
-
+                // Free the allocated memory at the current level
+                for (l = 0; l < j; l++) {
+                    free(lattice[i][l]);
                 }
-                free(*lattice);
-                return EXIT_FAILURE;
+                free(lattice[i]);
+
+                // Free memory allocated in previous levels
+                for (int k = 0; k < i; k++) {
+                    for (l = 0; l < lattice_side; l++) {
+                        free(lattice[k][l]);
+                    }
+                    free(lattice[k]);
+                }
+                free(lattice);
+                return NULL;  // Return NULL if allocation fails at this level
             }
         }
     }
-    return EXIT_SUCCESS;
+    return lattice;  // Return the allocated 3D lattice
 }
