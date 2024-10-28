@@ -17,5 +17,6 @@ DoubleVector2D* magnetization(DoubleVector2D ***lattice, int lattice_side);
 double energy_per_site(DoubleVector2D ***lattice, int lattice_side);
 int initialize_lattice(DoubleVector2D ***lattice, int lattice_side);
 int local_metropolis(DoubleVector2D ***lattice, int i, int j, int k, int lattice_side, double alpha, double beta);
+int read_parameter(FILE *fp, char *param_name, char *param_type, void *value);
 
 #endif

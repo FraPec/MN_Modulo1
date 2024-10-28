@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../include/functions.h"
 #include "../include/random.h"
 
@@ -244,3 +245,20 @@ int local_metropolis(DoubleVector2D ***lattice, int i, int j, int k, int lattice
 
     return acc;
 }
+
+int read_parameter(FILE *fp, char *param_name, char *param_type, void *value) {
+    char file_param_name[50];
+    rewind(fp); // Reset file pointer to the beginning
+
+    // Loop over each line in the file
+    while (fscanf(fp, "%s", file_param_name) != EOF) {
+        if (strcmp(file_param_name, param_name) == 0) {
+            fscanf(fp, param_type, value);
+            return 1; // Parameter found and read successfully
+        }
+        // Skip the rest of the line if parameter doesn't match
+        fscanf( fp, "%*[^\n]");
+    }
+    return 0; // Parameter not found
+}
+
