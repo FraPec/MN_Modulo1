@@ -44,3 +44,9 @@ Makefile
 *.suo
 *.user
 *.DS_Store
+
+# Input and data files
+*.inp
+*.in
+*.i
+*.dat
