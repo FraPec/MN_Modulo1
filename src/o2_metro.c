@@ -10,7 +10,7 @@
 #define MAX_LENGTH 128
 
 int main(int argc, char * argv[]) {
-    // Check if the number of parameters is 2, i.e. ./program file.txt
+    // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat 
     if (argc!=3) {
         fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.in datafile\n");
         return EXIT_SUCCESS;
@@ -18,28 +18,28 @@ int main(int argc, char * argv[]) {
 
     char inp_file_name[MAX_LENGTH], data_name[MAX_LENGTH];
     strcpy(inp_file_name, argv[1]);
-    strcpy(data_name, argv[2]); 
+    strcpy(data_name, argv[2]);
 
     //////////////////////////////
     // Opening input and output //
     //////////////////////////////
-    // Trying to open the file give as input    
-    FILE *inp_file = fopen(inp_file_name, "r"); 
+    // Trying to open the file give as input
+    FILE *inp_file = fopen(inp_file_name, "r");
     if (inp_file == NULL) {
         fprintf(stderr, "Error opening input file\n");
         return EXIT_SUCCESS;
     }
-    // Trying to open the file give as output    
-    FILE *data = fopen(data_name, "w"); 
+    // Trying to open the file give as output
+    FILE *data = fopen(data_name, "w");
     if (data == NULL) {
         fprintf(stderr, "Error opening output file\n");
         fclose(inp_file);
         return EXIT_SUCCESS;
     }
-    fprintf(stdout, "Input file name: %s\n", inp_file_name); 
+    fprintf(stdout, "Input file name: %s\n", inp_file_name);
     fprintf(stdout, "Output file name: %s\n", data_name);
 
-      
+
     /////////////////////////////////////////////////////////////////
     // Let's extract all the useful parameters from the input file //
     /////////////////////////////////////////////////////////////////
@@ -67,7 +67,7 @@ int main(int argc, char * argv[]) {
     param_found = read_parameter(inp_file, param_name, param_type, &sample);
     if (param_found==1) {
         fprintf(stdout, "%s = %d\n", param_name, sample);
-    } else {  
+    } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
@@ -100,7 +100,7 @@ int main(int argc, char * argv[]) {
         fclose(data);
         return EXIT_SUCCESS;
     }
-    // epsilon = probability of perfoming L^3 metropolis update; (1-epsilon) is the prob. of performing L^3 microcan. updates 
+    // epsilon = probability of perfoming L^3 metropolis update; (1-epsilon) is the prob. of performing L^3 microcan. updates
     strcpy(param_name, "epsilon");
     strcpy(param_type, "%lf");
     param_found = read_parameter(inp_file, param_name, param_type, &epsilon);
@@ -113,8 +113,8 @@ int main(int argc, char * argv[]) {
         fclose(data);
         return EXIT_SUCCESS;
     }
-   
-    /////////////////////////////    
+
+    /////////////////////////////
     // Initialize seed for rng //
     /////////////////////////////
     const unsigned long int seed1 = time(NULL);
@@ -141,7 +141,7 @@ int main(int argc, char * argv[]) {
         free_lattice(lattice, lattice_side);
         return EXIT_SUCCESS;
     }
-    
+
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
@@ -156,11 +156,11 @@ int main(int argc, char * argv[]) {
             // random number generation after a complete update of the lattice
             random_n = myrand();
             if (random_n<epsilon) { // if such number is less than epsilon then the next L^3
-                metro=1;  // steps are metropolis, otherwise they are microcanonical 
+                metro=1;  // steps are metropolis, otherwise they are microcanonical
                 fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
                 strcpy(type_of_update, "metropolis");
             } else {
-                metro=0; // microcanonical steps    
+                metro=0; // microcanonical steps
                 fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
                 strcpy(type_of_update, "microcanonical");
             }
@@ -168,7 +168,7 @@ int main(int argc, char * argv[]) {
             for (l=0; l<lattice_side; l++) {
                 for (m=0; m<lattice_side; m++) {
                     for (n=0; n<lattice_side; n++) {
-                        normalization(&lattice[i][j][k]);   
+                        normalization(&lattice[i][j][k]);
                     }
                 }
             }
@@ -182,8 +182,8 @@ int main(int argc, char * argv[]) {
         random_n = myrand();
         k = (int) (lattice_side * random_n);
         s_old = lattice[i][j][k];
-        
-        // Microcanonical step        
+
+        // Microcanonical step
         if (metro==0) {
             micro_steps += 1;
             micro_acc += microcanonical(lattice, i, j, k, lattice_side);
@@ -191,9 +191,9 @@ int main(int argc, char * argv[]) {
         // Metropolis step
         if (metro==1) {
             metro_steps += 1;
-            metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);    
+            metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);
         }
-        s_new = lattice[i][j][k];   
+        s_new = lattice[i][j][k];
         E_per_site = energy_per_site(lattice, lattice_side);
         magn = magnetization(lattice, lattice_side);
         fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, E_per_site, magn->sx, magn->sy, type_of_update);
@@ -202,9 +202,7 @@ int main(int argc, char * argv[]) {
     fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
     fprintf(stdout, "Microcanonical steps performed and accepted: %d, %d\n", micro_steps, micro_acc);
     free_lattice(lattice, lattice_side);
-    fclose(inp_file);   
+    fclose(inp_file);
     fclose(data);
     return EXIT_SUCCESS;
 }
-
-
