@@ -12,21 +12,6 @@ double scalar_product(DoubleVector2D s1, DoubleVector2D s2){
     return sc;
 }
 
-int microcanonical(DoubleVector2D *s, DoubleVector2D *S) {
-     double sq_mod_S, sS_scal_prod;
-     int i;
-
-     sq_mod_S = scalar_product(*S, *S);
-     if (sqrt(sq_mod_S)<1e-13) {
-         return EXIT_FAILURE;
-     } else {
- 	sS_scal_prod = scalar_product(*s, *S);
- 	s->sx = 2 * S->sx * sS_scal_prod / sq_mod_S - s->sx;
-        s->sy = 2 * S->sy * sS_scal_prod / sq_mod_S - s->sy;
- 	return EXIT_SUCCESS;
-     }
-}
-
 
 int normalization(DoubleVector2D *s) {
 // How many normalizations needed during a simulation?
@@ -185,6 +170,46 @@ int initialize_lattice(DoubleVector2D ***lattice, int lattice_side) {
     }
     return EXIT_SUCCESS;
 }
+
+int microcanonical(DoubleVector2D ***lattice, int i, int j, int k, int lattice_side) {
+    int i_minus, i_plus, j_minus, j_plus, k_minus, k_plus, acc=0;
+    DoubleVector2D S_sum;
+    double sq_mod_S, sS_scal_prod;
+    // Checking index validity
+    if (i < 0 || i >= lattice_side || j < 0 || j >= lattice_side || k < 0 || k >= lattice_side) {
+        fprintf(stderr, "Invalid lattice indices: %d, %d, %d. Lattice side is %d \n", i, j, k, lattice_side);
+        return EXIT_FAILURE;
+    }
+    // Calculating neighboring indices with periodic boundary conditions
+    i_minus = (i - 1 + lattice_side) % lattice_side;
+    i_plus  = (i + 1) % lattice_side;
+    j_minus = (j - 1 + lattice_side) % lattice_side;
+    j_plus  = (j + 1) % lattice_side;
+    k_minus = (k - 1 + lattice_side) % lattice_side;
+    k_plus  = (k + 1) % lattice_side;
+    
+    // Calculating the sum of neighbors for sx and sy
+    S_sum.sx = lattice[i_minus][j][k].sx + lattice[i_plus][j][k].sx +
+               lattice[i][j_minus][k].sx + lattice[i][j_plus][k].sx +
+               lattice[i][j][k_minus].sx + lattice[i][j][k_plus].sx;
+
+    S_sum.sy = lattice[i_minus][j][k].sy + lattice[i_plus][j][k].sy +
+               lattice[i][j_minus][k].sy + lattice[i][j_plus][k].sy +
+               lattice[i][j][k_minus].sy + lattice[i][j][k_plus].sy;
+    // Modulus of S_sum
+    sq_mod_S = scalar_product(S_sum, S_sum);
+    // Check if it's big enought to avoid numerical errors
+    if (sqrt(sq_mod_S)<1e-13) {
+         return acc;
+    } else { // If its modulus is ok, then compute scalar product
+        sS_scal_prod = scalar_product(lattice[i][j][k], S_sum);
+        lattice[i][j][k].sx = 2 * S_sum.sx * sS_scal_prod / sq_mod_S - lattice[i][j][k].sx;
+        lattice[i][j][k].sy = 2 * S_sum.sy * sS_scal_prod / sq_mod_S - lattice[i][j][k].sy;
+        acc = 1;
+        return acc;
+    }
+}
+
 
 int local_metropolis(DoubleVector2D ***lattice, int i, int j, int k, int lattice_side, double alpha, double beta) {
     int i_minus, i_plus, j_minus, j_plus, k_minus, k_plus, acc=0;
