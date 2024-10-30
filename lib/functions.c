@@ -5,6 +5,7 @@
 #include "../include/functions.h"
 #include "../include/random.h"
 
+
 double scalar_product(DoubleVector2D s1, DoubleVector2D s2){
     double sc = 0.;
     sc = (s1.sx * s2.sx) + (s1.sy * s2.sy);
@@ -46,7 +47,6 @@ void free_lattice(DoubleVector2D ***lattice, int lattice_side) {
     }
     free(lattice); //Free the main array of DoubleVector2D**
 }
-
 
 
 
@@ -187,7 +187,7 @@ int microcanonical(DoubleVector2D ***lattice, int i, int j, int k, int lattice_s
     j_plus  = (j + 1) % lattice_side;
     k_minus = (k - 1 + lattice_side) % lattice_side;
     k_plus  = (k + 1) % lattice_side;
-    
+
     // Calculating the sum of neighbors for sx and sy
     S_sum.sx = lattice[i_minus][j][k].sx + lattice[i_plus][j][k].sx +
                lattice[i][j_minus][k].sx + lattice[i][j_plus][k].sx +
@@ -271,19 +271,26 @@ int local_metropolis(DoubleVector2D ***lattice, int i, int j, int k, int lattice
     return acc;
 }
 
+
+
+
 int read_parameter(FILE *fp, char *param_name, char *param_type, void *value) {
     char file_param_name[50];
     rewind(fp); // Reset file pointer to the beginning
 
-    // Loop over each line in the file
+    // Loop through each line in the file
     while (fscanf(fp, "%s", file_param_name) != EOF) {
+        // If the parameter name matches the one we're searching for
         if (strcmp(file_param_name, param_name) == 0) {
+            // Read the value in the correct format as specified by param_type
             fscanf(fp, param_type, value);
-            return 1; // Parameter found and read successfully
+            return 1; // Successfully read the parameter
         }
-        // Skip the rest of the line if parameter doesn't match
-        fscanf( fp, "%*[^\n]");
-    }
-    return 0; // Parameter not found
-}
 
+        // Skip to the next line if parameter name doesn't match
+        fscanf(fp, "%*[^\n]");
+    }
+
+    // Return 0 if the parameter wasn't found
+    return 0;
+}
