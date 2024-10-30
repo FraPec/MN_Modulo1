@@ -147,9 +147,10 @@ int main(int argc, char * argv[]) {
     ////////////////////////////////////
     int step, Vol, i, j, k, l, m, n, metro=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
     Vol = lattice_side * lattice_side * lattice_side;
-    double random_n;
-    DoubleVector2D s_old, s_new;
-    fprintf(data, "# step i j k sx_old sy_old sx_new sy_new E mx my\n");
+    double random_n, E_per_site;
+    char type_of_update[MAX_LENGTH];
+    DoubleVector2D s_old, s_new, * magn;
+    fprintf(data, "# step i j k sx_old sy_old sx_new sy_new E mx my type_of_update\n");
     for (step=0; step<sample; step++) {
         if (step%Vol==0) {
             // random number generation after a complete update of the lattice
@@ -157,9 +158,11 @@ int main(int argc, char * argv[]) {
             if (random_n<epsilon) { // if such number is less than epsilon then the next L^3
                 metro=1;  // steps are metropolis, otherwise they are microcanonical 
                 fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
+                strcpy(type_of_update, "metropolis");
             } else {
                 metro=0; // microcanonical steps    
                 fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
+                strcpy(type_of_update, "microcanonical");
             }
             // normalization of all the sites after a complete update of the lattice
             for (l=0; l<lattice_side; l++) {
@@ -182,7 +185,8 @@ int main(int argc, char * argv[]) {
         
         // Microcanonical step        
         if (metro==0) {
-            micro_steps += 1; 
+            micro_steps += 1;
+            micro_acc += microcanonical(lattice, i, j, k, lattice_side);
         }
         // Metropolis step
         if (metro==1) {
@@ -190,8 +194,9 @@ int main(int argc, char * argv[]) {
             metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);    
         }
         s_new = lattice[i][j][k];   
-
-        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy);
+        E_per_site = energy_per_site(lattice, lattice_side);
+        magn = magnetization(lattice, lattice_side);
+        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, E_per_site, magn->sx, magn->sy, type_of_update);
     }
     fprintf(stdout, "\nSimulation ended.\nTotal steps: %d\n", sample);
     fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
