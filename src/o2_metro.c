@@ -10,7 +10,7 @@
 #define MAX_LENGTH 128
 
 int main(int argc, char * argv[]) {
-    // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat 
+    // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat
     if (argc!=3) {
         fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.in datafile\n");
         return EXIT_SUCCESS;
@@ -145,12 +145,12 @@ int main(int argc, char * argv[]) {
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
-    int step, Vol, i, j, k, l, m, n, metro=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
+    int step=0, Vol, i, j, k, l, m, n, metro=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
     Vol = lattice_side * lattice_side * lattice_side;
     double random_n, E_per_site;
     char type_of_update[MAX_LENGTH];
     DoubleVector2D s_old, s_new, * magn;
-    fprintf(data, "# step i j k sx_old sy_old sx_new sy_new E mx my type_of_update\n");
+    fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my E type_of_update\n");
     for (step=0; step<sample; step++) {
         if (step%Vol==0) {
             // random number generation after a complete update of the lattice
@@ -168,7 +168,7 @@ int main(int argc, char * argv[]) {
             for (l=0; l<lattice_side; l++) {
                 for (m=0; m<lattice_side; m++) {
                     for (n=0; n<lattice_side; n++) {
-                        normalization(&lattice[i][j][k]);
+                        normalization(&lattice[l][m][n]);
                     }
                 }
             }
@@ -196,7 +196,7 @@ int main(int argc, char * argv[]) {
         s_new = lattice[i][j][k];
         E_per_site = energy_per_site(lattice, lattice_side);
         magn = magnetization(lattice, lattice_side);
-        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, E_per_site, magn->sx, magn->sy, type_of_update);
+        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
     }
     fprintf(stdout, "\nSimulation ended.\nTotal steps: %d\n", sample);
     fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
