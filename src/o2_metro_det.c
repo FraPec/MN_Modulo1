@@ -10,6 +10,10 @@
 #define MAX_LENGTH 128
 
 int main(int argc, char * argv[]) {
+    clock_t t_start, t_end;
+    double cpu_time_used;
+    t_start = clock();
+   
     // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat
     if (argc!=3) {
         fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.in datafile\n");
@@ -214,40 +218,7 @@ int main(int argc, char * argv[]) {
                 }
             }
         }
-
-
-
-
-        // // Generation of 3 random indexes to obtain lattice site
-        // random_n = myrand();
-        // i = (int) (lattice_side * random_n); // such operation works as a floor operation, not a round operation
-        // random_n = myrand();
-        // j = (int) (lattice_side * random_n);
-        // random_n = myrand();
-        // k = (int) (lattice_side * random_n);
-        // s_old = lattice[i][j][k];
-
-        // Microcanonical step
-        // if (metro==0) {
-        //     micro_steps += 1;
-        //     micro_acc += microcanonical(lattice, i, j, k, lattice_side);
-        // }
-        // // Metropolis step
-        // if (metro==1) {
-        //     metro_steps += 1;
-        //     metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);
-        // }
-        // s_new = lattice[i][j][k];
-        // E_per_site = energy_per_site(lattice, lattice_side);
-        // magn = magnetization(lattice, lattice_side);
-        // fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, E_per_site, magn->sx, magn->sy, type_of_update);
-
     }
-
-
-
-
-
 
     fprintf(stdout, "\nSimulation ended.\nTotal steps: %d\n", sample);
     fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
@@ -255,5 +226,8 @@ int main(int argc, char * argv[]) {
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);
+    t_end = clock();
+    cpu_time_used = ((double) (t_end - t_start)) / CLOCKS_PER_SEC;
+    fprintf(stdout, "Runtime of the last simulation: %.10lf\n", cpu_time_used);
     return EXIT_SUCCESS;
 }
