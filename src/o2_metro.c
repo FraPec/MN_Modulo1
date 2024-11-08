@@ -10,6 +10,10 @@
 #define MAX_LENGTH 128
 
 int main(int argc, char * argv[]) {
+    clock_t t_start, t_end;
+    double cpu_time_used;
+    t_start = clock();
+    
     // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat
     if (argc!=3) {
         fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.in datafile\n");
@@ -204,5 +208,8 @@ int main(int argc, char * argv[]) {
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);
+    t_end = clock();
+    cpu_time_used = ((double) (t_end - t_start)) / CLOCKS_PER_SEC;
+    fprintf(stdout, "Runtime of the last simulation: %.10lf\n", cpu_time_used);
     return EXIT_SUCCESS;
 }
