@@ -14,9 +14,8 @@ gcc -o "$filename".o "$1" ../lib/functions.c ../lib/random.c ../lib/pcg32min.c -
 
 # Check if the compilation was successful
 if [ $? -eq 0 ]; then
-    echo "Compilation successful: $filename"
+    echo "Compilation successful: $filename.o"
 else
     echo "Compilation failed."
     exit 1
 fi
-
