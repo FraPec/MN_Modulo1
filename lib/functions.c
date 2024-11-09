@@ -287,7 +287,7 @@ int read_parameter(FILE *fp, char *param_name, char *param_type, void *value) {
                 return 1; // Successfully read the parameter
             } else {
                 fprintf(stderr, "Error: Could not read value for parameter '%s'\n", param_name);
-                return -1; // Successfully read the parameter
+                return -1; // Failure reading the parameter
             }
         }
 
