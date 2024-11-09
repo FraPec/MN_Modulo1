@@ -1,12 +1,23 @@
 #!/bin/bash
 
-# Define the range of each parameter
-beta_values=(0.3)# 0.4 0.5 0.6)
-alpha_values=(0.1)
-lattice_side_values=(40) # 30 40)
+# Check if both arguments are provided
+if [[ $# -ne 2 ]]; then
+    echo "Usage: $0 executable.o num_procs"
+    exit 1
+fi
 
+# Assign arguments to variables
+executable="$1"
 # Get the number of available processors
-num_procs=8
+num_procs="$2"
+
+
+
+# Define the range of each parameter
+beta_values=(0.3 0.4 0.5) # 0.6)
+alpha_values=(0.1)
+lattice_side_values=(20 40) # 30 40)
+
 
 # Counter to track the number of running processes
 proc_count=0
@@ -47,7 +58,7 @@ EOF
 
             # Run the simulation in the background, redirecting stdout to output file
             echo "Running simulation with beta=$beta, alpha=$alpha, lattice_side=$lattice_side"
-            ./o2_metro_det.o "$input_file" "$data_file" > "$output_file" &
+            ./$executable "$input_file" "$data_file" > "$output_file" &
 
             # Increment the process counter
             ((proc_count++))
