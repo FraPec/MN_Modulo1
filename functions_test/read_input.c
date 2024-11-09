@@ -30,7 +30,10 @@ int main(int argc, char *argv[]) {
     char param_name2[50] = "alpha";
     char param_type2[50] = "%d";
     int param_value2;
-
+    
+    char param_name3[50] = "epsilon";
+    char param_type3[50] = "%lf";
+    int param_value3;
     
     int param_found = 0;
     param_found = read_parameter(file, param_name1, param_type1, &param_value1);
@@ -46,6 +49,15 @@ int main(int argc, char *argv[]) {
     fprintf(stdout,"Second test:\n");
     if (param_found==0) {
         fprintf(stdout, "Parameter not found.\nTest passed!\n");
+    } else {
+        fprintf(stdout, "Test failed!\n");
+    }
+    
+    param_found = 0;
+    fprintf(stdout,"Third test:\n");
+    param_found = read_parameter(file, param_name3, param_type3, &param_value3);
+    if (param_found==-1) {
+        fprintf(stdout, "Error in reading parameter.\nTest passed!\n");
     } else {
         fprintf(stdout, "Test failed!\n");
     }

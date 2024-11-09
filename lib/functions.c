@@ -283,12 +283,18 @@ int read_parameter(FILE *fp, char *param_name, char *param_type, void *value) {
         // If the parameter name matches the one we're searching for
         if (strcmp(file_param_name, param_name) == 0) {
             // Read the value in the correct format as specified by param_type
-            fscanf(fp, param_type, value);
-            return 1; // Successfully read the parameter
+            if (fscanf(fp, param_type, value) == 1) { // Check if the read was successful
+                return 1; // Successfully read the parameter
+            } else {
+                fprintf(stderr, "Error: Could not read value for parameter '%s'\n", param_name);
+                return -1; // Successfully read the parameter
+            }
         }
 
         // Skip to the next line if parameter name doesn't match
-        fscanf(fp, "%*[^\n]");
+        if (fscanf(fp, "%*[^\n]") == EOF) {  // Check for end of file
+            break; // End of file or error in reading line
+        }
     }
 
     // Return 0 if the parameter wasn't found
