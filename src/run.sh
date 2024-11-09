@@ -38,9 +38,9 @@ done
 
 
 # Loop over each combination of beta, alpha, and lattice_side
-for beta in "${beta_values[@]}"; do
-    for alpha in "${alpha_values[@]}"; do
-        for lattice_side in "${lattice_side_values[@]}"; do
+for lattice_side in "${lattice_side_values[@]}"; do
+    for beta in "${beta_values[@]}"; do
+        for alpha in "${alpha_values[@]}"; do
 
             # Define filenames within their respective folders
             input_file="inputs/lattice${lattice_side}/input_b${beta}_a${alpha}_L${lattice_side}.in"
@@ -50,7 +50,7 @@ for beta in "${beta_values[@]}"; do
             # Generate the input file for this run
             cat > "$input_file" <<EOF
 lattice_side $lattice_side
-sample 1000000    # Adjust the number of steps as desired
+sample 100000000    # Adjust the number of steps as desired
 beta $beta
 alpha $alpha
 epsilon 0.2    # Adjust epsilon as needed
