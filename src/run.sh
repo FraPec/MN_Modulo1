@@ -14,9 +14,9 @@ num_procs="$2"
 
 
 # Define the range of each parameter
-beta_values=(0.3 0.4 0.5) # 0.6)
-alpha_values=(0.1)
-lattice_side_values=(20 40) # 30 40)
+beta_values=(0.3 0.4 0.5 0.6)
+alpha_values=(0.001 0.01 0.1 1)
+lattice_side_values=(5 10 20 30 40)
 
 
 # Counter to track the number of running processes
