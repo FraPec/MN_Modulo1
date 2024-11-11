@@ -49,9 +49,31 @@ int main(int argc, char * argv[]) {
     /////////////////////////////////////////////////////////////////
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
+    char data_format[MAX_LENGTH];
     int lattice_side, sample;
     double beta, alpha, epsilon;
     fprintf(stdout, "### Parameters of the simulation:\n");
+    // Type of data format of the output .dat file
+    strcpy(param_name, "output_data_format");
+    strcpy(param_type, "%s");
+    param_found = read_parameter(inp_file, param_name, param_type, &data_format);
+    if (param_found==1) {
+        fprintf(stdout, "%s = %s\n", param_name, data_format);
+        if (strcmp(data_format, "minimal")!=0 && strcmp(data_format, "complete")!=0) {
+            fprintf(stdout, "Invalid type of format choosen for the file! Valid keywords: 'minimal' and 'complete'.\n");
+            fprintf(stdout, "Simulation aborted!\n");
+            fclose(inp_file);
+            fclose(data);
+            return EXIT_SUCCESS;
+        }
+    } else {
+        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
+        fprintf(stdout, "Simulation aborted!\n");
+        fclose(inp_file);
+        fclose(data);
+        return EXIT_SUCCESS;
+    }
+    
     // lattice_side = side of the 3D square lattice
     strcpy(param_name, "lattice_side");
     strcpy(param_type, "%d");
@@ -156,8 +178,12 @@ int main(int argc, char * argv[]) {
     double random_n, E_per_site;
     char type_of_update[MAX_LENGTH];
     DoubleVector2D s_old, s_new, * magn;
-    fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my E type_of_update\n");
-
+    if (strcmp(data_format, "complete")==0) {
+        fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my Energy_per_site\n");
+    } 
+    if (strcmp(data_format, "minimal")==0) {
+        fprintf(data, "# mx my Energy_per_site\n");
+    }
 
 
 
@@ -195,7 +221,12 @@ int main(int argc, char * argv[]) {
                         s_new = lattice[i][j][k];
                         E_per_site = energy_per_site(lattice, lattice_side);
                         magn = magnetization(lattice, lattice_side);
-                        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                        if (strcmp(data_format, "complete")==0) {
+                            fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                        }
+                        if (strcmp(data_format, "minimal")==0) {
+                            fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
+                        }
                         step +=1;
                     }
                 }
@@ -212,7 +243,12 @@ int main(int argc, char * argv[]) {
                         s_new = lattice[i][j][k];
                         E_per_site = energy_per_site(lattice, lattice_side);
                         magn = magnetization(lattice, lattice_side);
-                        fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                        if (strcmp(data_format, "complete")==0) {
+                            fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                        }
+                        if (strcmp(data_format, "minimal")==0) {
+                            fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
+                        }
                         step +=1;
                     }
                 }
