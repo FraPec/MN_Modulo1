@@ -14,7 +14,7 @@ num_procs="$2"
 
 beta_values=(0.3 0.4 0.5 0.6)
 alpha_values=(0.001 0.01 0.1 1)
-lattice_side_values=(5 10 20 30 40)
+lattice_side_values=(10 20 30 40 50 60 70)
 # Counter to track the number of running processes
 proc_count=0
 
@@ -44,7 +44,7 @@ for lattice_side in "${lattice_side_values[@]}"; do
             # Generate the input file for this run
             cat > "$input_file" <<EOF
 lattice_side $lattice_side
-sample 64000   
+sample 1000000   
 output_data_format minimal
 beta $beta
 alpha $alpha

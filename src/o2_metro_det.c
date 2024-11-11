@@ -156,6 +156,7 @@ int main(int argc, char * argv[]) {
     if (lattice==NULL) {
         fprintf(stdout, "Failed lattice structure allocation, simulation aborted!\n");
         fclose(inp_file);
+	fclose(data);
         return EXIT_SUCCESS;
     }
     if (initialize_lattice(lattice, lattice_side)==EXIT_SUCCESS) {
