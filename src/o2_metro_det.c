@@ -24,25 +24,16 @@ int main(int argc, char * argv[]) {
     strcpy(inp_file_name, argv[1]);
     strcpy(data_name, argv[2]);
 
-    //////////////////////////////
-    // Opening input and output //
-    //////////////////////////////
-    // Trying to open the file give as input
+    ///////////////////////////////////////////////////////////////
+    // Opening input file from which inputs parameters are taken //
+    ///////////////////////////////////////////////////////////////
+    // Trying to open the file given as input
     FILE *inp_file = fopen(inp_file_name, "r");
     if (inp_file == NULL) {
         fprintf(stderr, "Error opening input file\n");
         return EXIT_SUCCESS;
     }
-    // Trying to open the file give as output
-    FILE *data = fopen(data_name, "w");
-    if (data == NULL) {
-        fprintf(stderr, "Error opening output file\n");
-        fclose(inp_file);
-        return EXIT_SUCCESS;
-    }
-    fprintf(stdout, "Input file name: %s\n", inp_file_name);
-    fprintf(stdout, "Output file name: %s\n", data_name);
-
+    fprintf(stdout, "Parameters input file name: %s\n", inp_file_name);
 
     /////////////////////////////////////////////////////////////////
     // Let's extract all the useful parameters from the input file //
@@ -63,14 +54,12 @@ int main(int argc, char * argv[]) {
             fprintf(stdout, "Invalid type of format choosen for the file! Valid keywords: 'minimal' and 'complete'.\n");
             fprintf(stdout, "Simulation aborted!\n");
             fclose(inp_file);
-            fclose(data);
             return EXIT_SUCCESS;
         }
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     
@@ -84,7 +73,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // sample = number of data we want to collect
@@ -97,7 +85,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // beta = 1 / temperature
@@ -110,7 +97,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // alpha = angle for the metropolis step, new_theta~unif(-alpha + theta, alpha + theta): new s(theta) = s(ne_theta)
@@ -123,7 +109,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // epsilon = probability of perfoming L^3 metropolis update; (1-epsilon) is the prob. of performing L^3 microcan. updates
@@ -136,9 +121,25 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
+    //////////////////////////////////////////////////////////////////
+    // Opening data file in which simulation is going to be written //
+    //////////////////////////////////////////////////////////////////
+    // Trying to open the file give as output
+    FILE * data;
+    if (strcmp(data_format, "complete")==0) {
+	data = fopen(data_name, "w"); // we are choosing to write in a human readible file
+    }
+    if (strcmp(data_format, "minimal")==0) {
+        data = fopen(data_name, "wb"); // we are choosing to write in a binary
+    }
+    if (data == NULL) {
+        fprintf(stderr, "Error opening output data file\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    fprintf(stdout, "Data file name: %s\n", data_name);
 
     /////////////////////////////
     // Initialize seed for rng //
@@ -155,7 +156,6 @@ int main(int argc, char * argv[]) {
     if (lattice==NULL) {
         fprintf(stdout, "Failed lattice structure allocation, simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     if (initialize_lattice(lattice, lattice_side)==EXIT_SUCCESS) {
@@ -168,8 +168,6 @@ int main(int argc, char * argv[]) {
         return EXIT_SUCCESS;
     }
 
-
-
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
@@ -181,11 +179,6 @@ int main(int argc, char * argv[]) {
     if (strcmp(data_format, "complete")==0) {
         fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my Energy_per_site\n");
     } 
-    if (strcmp(data_format, "minimal")==0) {
-        fprintf(data, "# mx my Energy_per_site\n");
-    }
-
-
 
     while (step<sample) {
         if (step%Vol==0) {
@@ -225,7 +218,10 @@ int main(int argc, char * argv[]) {
                             fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
                         }
                         if (strcmp(data_format, "minimal")==0) {
-                            fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
+		            // To write in a binary we use fwrite()
+                            fwrite(&magn->sx, sizeof(double), 1, data);
+		            fwrite(&magn->sy, sizeof(double), 1, data);
+			    fwrite(&E_per_site, sizeof(double), 1, data);
                         }
                         step +=1;
                     }
@@ -247,9 +243,12 @@ int main(int argc, char * argv[]) {
                             fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
                         }
                         if (strcmp(data_format, "minimal")==0) {
-                            fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
-                        }
-                        step +=1;
+		            // To write in a binary we use fwrite()
+                            fwrite(&magn->sx, sizeof(double), 1, data);
+		            fwrite(&magn->sy, sizeof(double), 1, data);
+			    fwrite(&E_per_site, sizeof(double), 1, data);
+			}
+			step +=1;
                     }
                 }
             }
