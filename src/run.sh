@@ -18,14 +18,12 @@ lattice_side_values=(5 10 20 30 40)
 # Counter to track the number of running processes
 proc_count=0
 
-# Create directories for input, data, and output files
-# Check and remove directories if they exist, reindirizzando stdout e stderr
+# Check and remove directories if they exist
 [[ -d inputs ]] && rm -r inputs
 [[ -d data ]] && rm -r data
 [[ -d outputs ]] && rm -r outputs
-mkdir data outputs
 
-
+# Create directories for input, data, and output files, together with all the lattice subdirectories
 for lattice_side in "${lattice_side_values[@]}"; do
     mkdir -p inputs/lattice${lattice_side}
     mkdir -p data/lattice${lattice_side}
