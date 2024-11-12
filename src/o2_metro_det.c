@@ -40,7 +40,7 @@ int main(int argc, char * argv[]) {
     /////////////////////////////////////////////////////////////////
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
-    char data_format[MAX_LENGTH];
+    char data_format[MAX_LENGTH], seed[MAX_LENGTH];
     int lattice_side, sample;
     double beta, alpha, epsilon;
     fprintf(stdout, "### Parameters of the simulation:\n");
@@ -123,6 +123,25 @@ int main(int argc, char * argv[]) {
         fclose(inp_file);
         return EXIT_SUCCESS;
     }
+    // seed = seed for rng, can be choosen to be time or a custom number to make simulation reproducible
+    unsigned long int seed1; 
+    strcpy(param_name, "seed");
+    strcpy(param_type, "%s");
+    param_found = read_parameter(inp_file, param_name, param_type, &seed);
+    if (param_found==1) {
+        fprintf(stdout, "%s = %s\n", param_name, seed);
+    } else {
+        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
+        fprintf(stdout, "Simulation aborted!\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    if (strcmp(seed, "time")==0) {
+        seed1 = (const unsigned long int)time(NULL);
+    } else { // Everything else other than the keyword "time" is converted to a long unsigned int, so be careful
+        seed1 = (const unsigned long int)atoi(seed);
+    }
+
     //////////////////////////////////////////////////////////////////
     // Opening data file in which simulation is going to be written //
     //////////////////////////////////////////////////////////////////
@@ -144,7 +163,6 @@ int main(int argc, char * argv[]) {
     /////////////////////////////
     // Initialize seed for rng //
     /////////////////////////////
-    const unsigned long int seed1 = time(NULL);
     const unsigned long int seed2 = seed1 + 137;
     fprintf(stdout, "Current seeds: %d, %d\n", (int)seed1, (int)seed2);
     myrand_init(seed1, seed2);
