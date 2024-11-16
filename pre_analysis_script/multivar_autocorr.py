@@ -1,10 +1,9 @@
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import time
 from functools import wraps
-
-
 
 def timeit(file_path="timing_results.txt"):
     """Decorator to measure the execution time of a function and log it to a file."""
@@ -110,24 +109,60 @@ class TimeSeries_to_autocorr_lag_h:
         )
         autocorr_matrices = np.array(autocorr_matrices)
         return autocorr_matrices
+    
+    def print_to_file(self, filename, max_lag, column_names=None):
+        """
+        Saves the computed autocorrelation matrices to a file, with an optional header comment.
 
+        :param filename: Name of the output file.
+        :param max_lag: Maximum lag for autocorrelations.
+        :param column_names: List of column names for the header (optional).
+        """
+        # Compute the autocorrelation matrices
+        autocorr_matrices = self.compute_autocorrelations(max_lag)
+
+        with open(filename, "a") as file:
+            # Add column names as a header if provided
+            if column_names:
+                header = "# Columns: " + ", ".join(column_names) + "\n"
+                file.write(header)
+
+            # Save each matrix as a flattened row with the lag as the first value
+            for matrix in autocorr_matrices:
+                flattened_matrix = matrix.flatten()
+                np.savetxt(file, [flattened_matrix], fmt='%0.12f', delimiter=" ")
+        return
 
 
 
 if __name__ == '__main__':
+   
+    personal_path = "/home/francesco/Documents/coding_projects/"
+    repo_path = "MN_Modulo1/pre_analysis_data/"
+    autocorr_path = os.path.join(personal_path, repo_path, "pre_analysis_autocorr")
+    repo_path = "MN_Modulo1/pre_analysis_data/data/"
+    path = os.path.join(personal_path, repo_path)
+    # Creazione della cartella pre_analysis_autocorr se non esiste
+    os.makedirs(autocorr_path, exist_ok=True)
+
+    lattice_side_v = [10]#, 20, 30, 40, 50, 60, 70]
+    beta_v = [0.3]#, 0.4, 0.5, 0.6]
+    alpha_v = [0.001, 0.01, 0.1, 1]
     
-    #Importing data from binary file
-    data = load_binary_file('MN_Modulo1/pre_analysis_data/data/lattice10/data_b0.5_a0.001_L10.dat', 3)
-    magns_per_site = data[:,0:2]
-    e_per_site = data[:,2]
-    # Make a class instance 
-    analyzer = TimeSeries_to_autocorr_lag_h(magns_per_site)
-    #Compute the autocorr of lag h of the multivariate time series
-    autocorr_matrices = analyzer.compute_autocorrelations(max_lag = int(analyzer.N / 2))
-    
-    print(autocorr_matrices[1])
-    
-    
-    
+    # Iterazione sui parametri
+    for lattice_side in lattice_side_v:
+        current_dir = os.path.join(path, "lattice" + str(lattice_side))  # Corretto senza '/'
+        for beta in beta_v:
+            for alpha in alpha_v:
+                current_file = os.path.join(current_dir, f"data_b{beta}_a{alpha}_L{lattice_side}.dat")
+                data = load_binary_file(current_file, 3)
+                magns_per_site = data[:,0:2]
+                analyzer = TimeSeries_to_autocorr_lag_h(magns_per_site)
+                current_max_lag = int(analyzer.N / 100)
+                # Salvataggio delle autocorrelazioni
+                output_file = os.path.join(
+                    autocorr_path, f"L{lattice_side}_b{beta}_a{alpha}_autocorr.txt"
+                )
+                analyzer.print_to_file(output_file, current_max_lag, column_names=["autocorr_XX", "autocorr_XY", "autocorr_YX", "autocorr_YY"])
     
 
