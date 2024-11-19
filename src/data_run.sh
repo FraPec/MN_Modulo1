@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set locale for correct numeric formatting
+export LC_NUMERIC=C
+
 # Check if both arguments are provided
 if [[ $# -ne 2 ]]; then
     echo "Usage: $0 executable.o num_procs"
@@ -46,12 +49,11 @@ other_values2=($(seq $other_start2 $other_step2 $other_end2))
 
 # Combine all values and sort
 beta_values=(${other_values1[@]} ${specific_values[@]} ${other_values2[@]})
-sorted_beta_values=($(for val in "${beta_values[@]}"; do echo $val; done | sort -n))
+beta_values[$total_values - 1]=0.55
 
-# Ensure last value is exactly 0.55 (correct any rounding error)
-if [[ $(echo "${sorted_beta_values[-1]}" | bc) != "0.55" ]]; then
-  sorted_beta_values[-1]=0.55
-fi
+# Print combined and sorted beta values
+echo "Combined and sorted beta values:"
+echo "${beta_values[@]}"
 
 alpha_values=(0.01)
 lattice_side_values=(10 20 30 40 50 60 70)
@@ -84,6 +86,7 @@ for lattice_side in "${lattice_side_values[@]}"; do
             # Generate the input file for this run
             cat > "$input_file" <<EOF
 lattice_side $lattice_side
+seed time
 sample 4000000   
 output_data_format minimal
 beta $beta
