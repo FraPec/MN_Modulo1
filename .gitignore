@@ -56,4 +56,9 @@ Makefile
 *.i
 *.dat
 *.txt
+
+# images 
 *.pdf
+*.png
+*.jpeg
+*.jpg
