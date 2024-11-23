@@ -1,7 +1,63 @@
 from scipy.optimize import curve_fit
+from scipy.stats import linregress 
+from scipy.interpolate import CubicSpline
 import numpy as np
 import matplotlib.pyplot as plt
 
+
+def numerical_derivative(data, locality=1, data_scale='linear'):
+    # Check if locality is too large for the given dataset
+    if locality > np.floor(data.shape[0] / 2) - 1:
+        raise ValueError("Locality is too long compared with data shape")
+    
+    # Check if the data has the correct shape (N, 2)
+    if data.shape[1] != 2:
+        raise ValueError(f"Invalid data format. Required shape = (N, 2), given {data.shape}")
+    
+    # Check if the data scale is valid
+    if data_scale not in ['linear', 'logxy', 'semilogx', 'semilogy']:
+        raise ValueError("Invalid data scale. Valid inputs: 'linear', 'logxy', 'semilogx', 'semilogy'.")
+    
+    # Apply transformations based on the data scale
+    if data_scale == 'logxy':
+        if np.any(data <= 0):
+            raise ValueError("Data contains non-positive values, cannot apply log10 in logxy scale")
+        data = np.log10(data)  # Apply log10 to both x and y
+    elif data_scale == 'semilogx':
+        if np.any(data[:, 0] <= 0):
+            raise ValueError("X contains non-positive values, cannot apply log10 in semilogx scale")
+        data[:, 0] = np.log10(data[:, 0])  # Apply log10 to x only
+    elif data_scale == 'semilogy':
+        if np.any(data[:, 1] <= 0):
+            raise ValueError("Y contains non-positive values, cannot apply log10 in semilogy scale")
+        data[:, 1] = np.log10(data[:, 1])  # Apply log10 to y only
+    
+    
+    # Calculate the number of valid points for derivative computation
+    n_points = data.shape[0] - 2 * locality
+    if n_points <= 0:
+        raise ValueError("Locality too large for the given data size.")
+    
+    # Initialize an array to store the derivative results
+    derivative_v = np.zeros((n_points, 2))
+    
+    # Compute the derivatives using linear regression
+    for idx, i in enumerate(range(locality, data.shape[0] - locality)):
+        # Select a window of points around the current index
+        x_values = data[i - locality:i + locality + 1, 0]
+        y_values = data[i - locality:i + locality + 1, 1]
+        
+        # Perform linear regression on the selected window
+        fit_result = linregress(x_values, y_values)
+        
+        # Store the central x value and the computed slope (derivative)
+        derivative_v[idx, 0] = data[i, 0]  # Central x value
+        derivative_v[idx, 1] = fit_result.slope  # Slope as the derivative
+    
+    return derivative_v
+        
+      
+           
 
 
 
@@ -22,6 +78,7 @@ def load_binary_file(filepath, n_cols):
     data = data.reshape(-1, n_cols)  # Reshape to have 3 columns
     return data
 
+
 def blocking(data, block_size):
     N = data.shape[0]
     data = data[:(N//block_size * block_size)]
@@ -29,11 +86,14 @@ def blocking(data, block_size):
     data_k = np.mean(data_reshaped, axis = 1) # mean over the block of len block_size
     data_mean = np.mean(data)
     data_res_k = data_k - data_mean
-    sigma_squared = 1 / ((N/block_size) * (N/block_size - 1)) * np.sum(np.power(data_res_k, 2))
-    return sigma_squared
+    variance = 1 / ((N/block_size) * (N/block_size - 1)) * np.sum(np.power(data_res_k, 2))
+    return variance
 
 def fit_function(x, a, b, m):
     return a * (1 - np.exp(-b * x**m)) 
+    
+    
+    
 
 if __name__ == "__main__":
     # Load and preprocess data
@@ -42,44 +102,67 @@ if __name__ == "__main__":
     N = data.shape[0]
 
     # Generate block sizes
-    block_sizes_v = np.unique(np.logspace(0, np.log10(400000), 400, dtype=int))
-    sigma_v = np.zeros(block_sizes_v.shape)
+    block_sizes_v = np.unique(np.logspace(0, np.log10(1900000), 400, dtype=int))
+    variance_v = np.zeros(block_sizes_v.shape)
 
     # Compute standard deviation for each block size
     for i, block_size in enumerate(block_sizes_v):
-        sigma_v[i] = np.sqrt(blocking(data[:, 1], block_size))
+        variance_v[i] = blocking(data[:, 1], block_size)
+        
 
-    print(f"m_x = {np.mean(data[:, 1])}")
-    print(sigma_v)
+    print(f"m_y = {np.mean(data[:, 1])}")
+    print(variance_v)
     print(block_sizes_v)
+    
+    
+    der_v = numerical_derivative(
+        np.array([block_sizes_v, variance_v]).T,  # Convert to shape (N, 2)
+        locality=5,
+        data_scale='logxy'
+        )
+        
+    der_f = CubicSpline(der_v[:, 0], der_v[:, 1])    
+    zeros_der = der_f.roots()
+    print(10**zeros_der)
+                        
+    plt.plot(10**(der_v[:, 0]), der_v[:, 1])
 
     # Fit parameters
-    a = 5e-4
-    b = (sigma_v[3] / (5e-4 * block_sizes_v[3]**(1/2)))
-    m = 1 / 2
+    a = (5e-4)**2
+    b = (variance_v[3] / (5e-4 * block_sizes_v[3]**(1/2)))
+    m = 1 
     p0 = [a, b, m]
-    popt, pcov = curve_fit(fit_function, block_sizes_v, sigma_v, p0=p0)
+    max_block_size = 10**zeros_der[0]
+    mask = block_sizes_v < max_block_size
+    popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variance_v[mask], p0=p0, maxfev = 4000)
     a, b, m = popt
     std_dev = np.sqrt(np.diag(pcov))
     print(f"A = {a} ± {std_dev[0]}, b = {b} ± {std_dev[1]}, m = {m} ± {std_dev[2]}")
     print(f"Covariance matrix:\n{pcov}")
+    
+    
+
+    
+
+                
+    
 
     # Create subplots with shared x-axes
     fig, axs = plt.subplots(2, 1, figsize=(10, 8), sharex=True)  # Share x-axis
 
     # Plot data and fitted curve on the first subplot
-    axs[0].scatter(block_sizes_v, sigma_v, marker=".", label="data")
+    axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data")
     axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="red", label="fitted curve")
     axs[0].set_xscale("log")
     axs[0].set_yscale("log")
-    axs[0].set_ylabel(r"$\sigma_{m_x}$", fontsize=14)
+    axs[0].set_ylabel(r"$VAR(m_y)$", fontsize=14)
     axs[0].set_title("Fitted Curve vs Data", fontsize=16)
     axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
     axs[0].legend(fontsize=12)
 
     # Plot residuals on the second subplot
-    residuals = fit_function(block_sizes_v, a, b, m) - sigma_v
-    axs[1].plot(block_sizes_v, residuals, label="residuals", color="red")
+    residuals = fit_function(block_sizes_v, a, b, m) - variance_v
+    axs[1].plot(block_sizes_v[mask], residuals[mask], label="residuals", color="red")
     axs[1].set_xscale("log")
     axs[1].set_xlabel("Block size", fontsize=14)
     axs[1].set_ylabel("Residuals", fontsize=14)
@@ -90,5 +173,8 @@ if __name__ == "__main__":
     # Adjust layout and display the plots
     plt.tight_layout()
     plt.show()
+    
+    
+    
 
 
