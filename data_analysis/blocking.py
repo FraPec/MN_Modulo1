@@ -3,7 +3,7 @@ from scipy.stats import linregress
 from scipy.interpolate import CubicSpline
 import numpy as np
 import matplotlib.pyplot as plt
-
+import argparse
 
 def numerical_derivative(data, locality=1, data_scale='linear'):
     # Check if locality is too large for the given dataset
@@ -91,10 +91,57 @@ def blocking(data, block_size):
 
 def fit_function(x, a, b, m):
     return a * (1 - np.exp(-b * x**m)) 
+  
+def plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, filename, variable_name, std_dev):
+    # Create subplots with shared x-axes
+    fig, axs = plt.subplots(3, 1, figsize=(16, 9), sharex=True)  # Share x-axis
+    for ax in axs:
+        ax.tick_params(axis='both', which='major', labelsize=15)
+        ax.tick_params(axis='both', which='minor', labelsize=15) 
+
+    title = variable_name + ", " + filename 
+    plt.suptitle(title, fontsize=25)
+
+    # Plot data and fitted curve on the first subplot
+    axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data", zorder=0, color="red")
+    axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="blue", label="fitted curve", zorder=1)
+    axs[0].set_ylabel(f"Var({variable_name}) (k)", fontsize=20)
+    axs[0].set_xscale("log")
+    axs[0].set_yscale("log")
+    axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
+    axs[0].legend(fontsize=16)
+
+    # Plot residuals on the second subplot
+    axs[1].plot(block_sizes_v[mask], residuals[mask], label="residuals", color="green")
+    axs[1].set_ylabel("Residuals", fontsize=20)
+    axs[1].set_xscale("log")
+    axs[1].grid(True, which="both", linestyle="--", linewidth=0.5)
+    axs[1].legend(fontsize=16)
+
+    axs[2].plot(10**der_v[:, 0], der_v[:, 1], label="numerical", marker=".", linestyle=" ", color="red", zorder=0)
+    axs[2].plot(10**der_v[:, 0], der_f(der_v[:, 0]), label="spline interpolation", linestyle="-", color="blue", zorder=1)
+    axs[2].set_xlabel("Block size, k", fontsize=20)
+    axs[2].set_ylabel(f"dVar({variable_name})/dk", fontsize=20)
+    axs[2].set_xscale("log")
+    axs[2].grid(True, which="both", linestyle="--", linewidth=0.5)
+    axs[2].legend(fontsize=16)
+
+    # Adjust layout and display the plots
+    plt.tight_layout()
+    plt.savefig(filename)
     
+    
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Fit and plot to estimate the std dev for the sample means")
+    parser.add_argument("--datafile", type=str, help="Name of the data file to analize with blocking")
+    parser.add_argument("--plot_name", type=str, help="Name of the plotted figure of the blocking analysis")
+    args = parser.parse_args()
+    filename = args.datafile
+    plot_name = args.plot_name
     # Load and preprocess data
-    data = load_binary_file("data_b0.54978_a0.01_L40.dat", 3)
+    data = load_binary_file(filename, 3)
     data = data[int(1e5):int(4e6), :]
     N = data.shape[0]
 
@@ -124,6 +171,7 @@ if __name__ == "__main__":
                         
 
     # Fit parameters
+    variable_name = "my"
     a = max(variance_v)
     b = (variance_v[3] / (a * block_sizes_v[3]**(1/2)))
     m = 1 
@@ -137,70 +185,5 @@ if __name__ == "__main__":
     std_dev = np.sqrt(np.diag(pcov))
     print(f"A = {a} ± {std_dev[0]}, b = {b} ± {std_dev[1]}, m = {m} ± {std_dev[2]}")
     print(f"Covariance matrix:\n{pcov}")
-
-    # Create subplots with shared x-axes
-    fig, axs = plt.subplots(3, 1, figsize=(16, 9), sharex=True)  # Share x-axis
-
-    # Plot data and fitted curve on the first subplot
-    axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data", zorder=0, color="red")
-    axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="blue", label="fitted curve", zorder=1)
-    axs[0].set_ylabel(r"$\sigma^2_{m_y} (k)$", fontsize=20)
-    axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[0].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    # Plot residuals on the second subplot
-    axs[1].plot(block_sizes_v[mask], residuals[mask], label="residuals", color="green")
-    axs[1].set_ylabel("Residuals", fontsize=20)
-    axs[1].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[1].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    axs[2].plot(10**der_v[:, 0], der_v[:, 1], label="numerical", marker=".", linestyle=" ", color="red", zorder=0)
-    axs[2].plot(10**der_v[:, 0], der_f(der_v[:, 0]), label="spline interpolation", linestyle="-", color="blue", zorder=1)
-    axs[2].set_xlabel("Block size, k", fontsize=20)
-    axs[2].set_ylabel(r"$\frac{d \sigma^2_{m_y} (k)}{dk}$", fontsize=20)
-    axs[2].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[2].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    # Adjust layout and display the plots
-    plt.tight_layout()
-    
-    # Create subplots with shared x-axes
-    fig, axs = plt.subplots(3, 1, figsize=(16, 9), sharex=True)  # Share x-axis
-
-    # Plot data and fitted curve on the first subplot
-    axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data", zorder=0, color="red")
-    axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="blue", label="fitted curve", zorder=1)
-    axs[0].set_ylabel(r"$\sigma^2_{m_y} (k)$", fontsize=20)
-    axs[0].set_xscale("log")
-    axs[0].set_yscale("log")
-    axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[0].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    # Plot residuals on the second subplot
-    axs[1].plot(block_sizes_v[mask], residuals[mask], label="residuals", color="green")
-    axs[1].set_ylabel("Residuals", fontsize=20)
-    axs[1].set_xscale("log")
-    axs[1].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[1].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    axs[2].plot(10**der_v[:, 0], der_v[:, 1], label="numerical", marker=".", linestyle=" ", color="red", zorder=0)
-    axs[2].plot(10**der_v[:, 0], der_f(der_v[:, 0]), label="spline interpolation", linestyle="-", color="blue", zorder=1)
-    axs[2].set_xlabel("Block size, k", fontsize=20)
-    axs[2].set_ylabel(r"$\frac{d \sigma^2_{m_y} (k)}{dk}$", fontsize=20)
-    axs[2].set_xscale("log")
-    axs[2].grid(True, which="both", linestyle="--", linewidth=0.5)
-    axs[2].legend(fontsize=16)
-    plt.tick_params(axis='both', which='major', labelsize=16)
-
-    # Adjust layout and display the plots
-    plt.tight_layout()
-    plt.show()
-    
-    
-
+    plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, plot_name, variable_name, std_dev)  
 
