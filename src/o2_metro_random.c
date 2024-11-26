@@ -33,16 +33,7 @@ int main(int argc, char * argv[]) {
         fprintf(stderr, "Error opening input file\n");
         return EXIT_SUCCESS;
     }
-    // Trying to open the file give as output
-    FILE *data = fopen(data_name, "w");
-    if (data == NULL) {
-        fprintf(stderr, "Error opening output file\n");
-        fclose(inp_file);
-        return EXIT_SUCCESS;
-    }
     fprintf(stdout, "Input file name: %s\n", inp_file_name);
-    fprintf(stdout, "Output file name: %s\n", data_name);
-
 
     /////////////////////////////////////////////////////////////////
     // Let's extract all the useful parameters from the input file //
@@ -63,14 +54,12 @@ int main(int argc, char * argv[]) {
             fprintf(stdout, "Invalid type of format choosen for the file! Valid keywords: 'minimal' and 'complete'.\n");
             fprintf(stdout, "Simulation aborted!\n");
             fclose(inp_file);
-            fclose(data);
             return EXIT_SUCCESS;
         }
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // lattice_side = side of the 3D square lattice
@@ -83,7 +72,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // sample = number of data we want to collect
@@ -96,7 +84,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // beta = 1 / temperature
@@ -109,7 +96,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // alpha = angle for the metropolis step, new_theta~unif(-alpha + theta, alpha + theta): new s(theta) = s(ne_theta)
@@ -122,7 +108,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // epsilon = probability of perfoming L^3 metropolis update; (1-epsilon) is the prob. of performing L^3 microcan. updates
@@ -135,7 +120,6 @@ int main(int argc, char * argv[]) {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
         fclose(inp_file);
-        fclose(data);
         return EXIT_SUCCESS;
     }
     // seed = seed for rng, can be choosen to be time or a custom number to make simulation reproducible
@@ -156,6 +140,24 @@ int main(int argc, char * argv[]) {
         seed1 = (const unsigned long int)atoi(seed);
     }
 
+    //////////////////////////////////////////////////////////////////
+    // Opening data file in which simulation is going to be written //
+    //////////////////////////////////////////////////////////////////
+    // Trying to open the file give as output
+    FILE * data;
+    if (strcmp(data_format, "complete")==0) {
+	data = fopen(data_name, "w"); // we are choosing to write in a human readible file
+    }
+    if (strcmp(data_format, "minimal")==0) {
+        data = fopen(data_name, "wb"); // we are choosing to write in a binary
+    }
+    if (data == NULL) {
+        fprintf(stderr, "Error opening output data file\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    
+    fprintf(stdout, "Data file name: %s\n", data_name);
     /////////////////////////////
     // Initialize seed for rng //
     /////////////////////////////
@@ -194,10 +196,6 @@ int main(int argc, char * argv[]) {
     if (strcmp(data_format, "complete")==0) {
         fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my Energy_per_site\n");
     } 
-    if (strcmp(data_format, "minimal")==0) {
-        fprintf(data, "# mx my Energy_per_site\n");
-    }
-
 
     for (step=0; step<sample; step++) {
         if (step%Vol==0) {
@@ -248,8 +246,11 @@ int main(int argc, char * argv[]) {
             fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
         }
         if (strcmp(data_format, "minimal")==0) {
-            fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
-        }
+	    // To write in a binary we use fwrite()
+            fwrite(&magn->sx, sizeof(double), 1, data);
+	    fwrite(&magn->sy, sizeof(double), 1, data);
+	    fwrite(&E_per_site, sizeof(double), 1, data);
+	}
     }
     fprintf(stdout, "\nSimulation ended.\nTotal steps: %d\n", sample);
     fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
