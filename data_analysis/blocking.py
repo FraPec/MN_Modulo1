@@ -92,20 +92,20 @@ def blocking(data, block_size):
 def fit_function(x, a, b, m):
     return a * (1 - np.exp(-b * x**m)) 
   
-def plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, filename, variable_name, std_dev):
+def plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, plot_name, datafile_name, variable_name, std_dev):
     # Create subplots with shared x-axes
     fig, axs = plt.subplots(3, 1, figsize=(16, 9), sharex=True)  # Share x-axis
     for ax in axs:
         ax.tick_params(axis='both', which='major', labelsize=15)
         ax.tick_params(axis='both', which='minor', labelsize=15) 
 
-    title = variable_name + ", " + filename 
+    title = variable_name + ", " + datafile_name 
     plt.suptitle(title, fontsize=25)
 
     # Plot data and fitted curve on the first subplot
     axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data", zorder=0, color="red")
     axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="blue", label="fitted curve", zorder=1)
-    axs[0].set_ylabel(f"Var({variable_name}) (k)", fontsize=20)
+    axs[0].set_ylabel(rf"Var({variable_name}) (k)", fontsize=20)
     axs[0].set_xscale("log")
     axs[0].set_yscale("log")
     axs[0].grid(True, which="both", linestyle="--", linewidth=0.5)
@@ -121,29 +121,59 @@ def plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, ma
     axs[2].plot(10**der_v[:, 0], der_v[:, 1], label="numerical", marker=".", linestyle=" ", color="red", zorder=0)
     axs[2].plot(10**der_v[:, 0], der_f(der_v[:, 0]), label="spline interpolation", linestyle="-", color="blue", zorder=1)
     axs[2].set_xlabel("Block size, k", fontsize=20)
-    axs[2].set_ylabel(f"dVar({variable_name})/dk", fontsize=20)
+    axs[2].set_ylabel(rf"dVar({variable_name})/dk", fontsize=20)
     axs[2].set_xscale("log")
     axs[2].grid(True, which="both", linestyle="--", linewidth=0.5)
     axs[2].legend(fontsize=16)
 
     # Adjust layout and display the plots
     plt.tight_layout()
-    plt.savefig(filename)
+    plt.savefig(plot_name)
     
     
 
 
 if __name__ == "__main__":
+    # Section to deal with command lines from terminal
     parser = argparse.ArgumentParser(description="Fit and plot to estimate the std dev for the sample means")
-    parser.add_argument("--datafile", type=str, help="Name of the data file to analize with blocking")
-    parser.add_argument("--plot_name", type=str, help="Name of the plotted figure of the blocking analysis")
+    parser.add_argument("-i", "--input_datafile", type=str,required=True, 
+            help="Name of the input data file to analize with blocking")
+    parser.add_argument("-o", "--output_datafile", type=str, required=True, 
+            help="Name of the output data file in which the analysis output is going to be written") 
+    parser.add_argument("-p", "--plot_name", type=str, required=True, 
+            help="Name of the plotted figures of the blocking analysis. To such name will be added the _var for each of the plotted variables)")
     args = parser.parse_args()
-    filename = args.datafile
+    filename = args.input_datafile
+    output = args.output_datafile
     plot_name = args.plot_name
+
     # Load and preprocess data
     data = load_binary_file(filename, 3)
     data = data[int(1e5):int(4e6), :]
     N = data.shape[0]
+
+    # Generate a list of all the variables to compute
+    var_names = ["$m_x$", "$m_y$", "$E$", "$|\vv{m}|$", "$|\vv{m}|^2$",  "$|\vv{m}|^4$"]
+    var_arrays = [data[:, 0], data[:, 1], data[:, 2], # mx, my, E 
+            np.linalg.norm(data[:, :2], axis=1), # |m|
+            np.power(np.linalg.norm(data[:, :2], axis=1), 2.0), # |m|^2
+            np.power(np.linalg.norm(data[:, :2], axis=1), 4.0) # |m|^4
+            ]
+    
+    # Check that everything went fine with modules 
+    module = np.sqrt(np.power(var_arrays[0], 2.0) + np.power(var_arrays[1], 2.0))
+    if np.all(np.isclose(module, var_arrays[3])):
+        print("module is ok")
+    else:
+        raise ValueError("Something wrong happened with modules")
+    if np.all(np.isclose(module, np.sqrt(var_arrays[4]))):
+        print("module squared is ok")
+    else:
+        raise ValueError("Something wrong happened with modules")
+    if np.all(np.isclose(module, np.power(var_arrays[5], 1.0/4.0))):
+        print("module to the forth power is ok")
+    else:
+        raise ValueError("Something wrong happened with modules")
 
     # Generate block sizes
     block_sizes_v = np.unique(np.logspace(0, np.log10(1900000), 400, dtype=int))
@@ -155,8 +185,6 @@ if __name__ == "__main__":
         
 
     print(f"m_y = {np.mean(data[:, 1])}")
-    print(variance_v)
-    print(block_sizes_v)
     
     
     der_v = numerical_derivative(
@@ -171,7 +199,7 @@ if __name__ == "__main__":
                         
 
     # Fit parameters
-    variable_name = "my"
+    variable_name = "$m_y$"
     a = max(variance_v)
     b = (variance_v[3] / (a * block_sizes_v[3]**(1/2)))
     m = 1 
@@ -185,5 +213,5 @@ if __name__ == "__main__":
     std_dev = np.sqrt(np.diag(pcov))
     print(f"A = {a} ± {std_dev[0]}, b = {b} ± {std_dev[1]}, m = {m} ± {std_dev[2]}")
     print(f"Covariance matrix:\n{pcov}")
-    plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, plot_name, variable_name, std_dev)  
+    plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, plot_name, filename, variable_name, std_dev)  
 
