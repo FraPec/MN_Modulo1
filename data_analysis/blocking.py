@@ -136,12 +136,14 @@ def plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, ma
 if __name__ == "__main__":
     # Section to deal with command lines from terminal
     parser = argparse.ArgumentParser(description="Fit and plot to estimate the std dev for the sample means")
-    parser.add_argument("-i", "--input_datafile", type=str,required=True, 
+    parser.add_argument("--input_datafile", type=str,required=True, 
             help="Name of the input data file to analize with blocking")
-    parser.add_argument("-o", "--output_datafile", type=str, required=True, 
+    parser.add_argument("--output_datafile", type=str, required=True, 
             help="Name of the output data file in which the analysis output is going to be written") 
-    parser.add_argument("-p", "--plot_name", type=str, required=True, 
+    parser.add_argument("--plot_name", type=str, required=True, 
             help="Name of the plotted figures of the blocking analysis. To such name will be added the _var for each of the plotted variables)")
+    parser.add_argument("--locality", type=int, default=5, 
+            help="Integer to choose how many nearest neighbor to involve in the derivative computation")
     args = parser.parse_args()
     filename = args.input_datafile
     output = args.output_datafile
@@ -153,7 +155,7 @@ if __name__ == "__main__":
     N = data.shape[0]
 
     # Generate a list of all the variables to compute
-    var_names = ["$m_x$", "$m_y$", "$E$", "$|\vv{m}|$", "$|\vv{m}|^2$",  "$|\vv{m}|^4$"]
+    var_names = [r"$m_x$", r"$m_y$", r"$E$", r"$|\vec{m}|$", r"$|\vec{m}|^2$",  r"$|\vec{m}|^4$"]
     var_arrays = [data[:, 0], data[:, 1], data[:, 2], # mx, my, E 
             np.linalg.norm(data[:, :2], axis=1), # |m|
             np.power(np.linalg.norm(data[:, :2], axis=1), 2.0), # |m|^2
@@ -169,49 +171,64 @@ if __name__ == "__main__":
     if np.all(np.isclose(module, np.sqrt(var_arrays[4]))):
         print("module squared is ok")
     else:
-        raise ValueError("Something wrong happened with modules")
+        raise ValueError("Something wrong happened with squared modules")
     if np.all(np.isclose(module, np.power(var_arrays[5], 1.0/4.0))):
         print("module to the forth power is ok")
     else:
-        raise ValueError("Something wrong happened with modules")
+        raise ValueError("Something wrong happened with modules to the fourth power")
 
     # Generate block sizes
     block_sizes_v = np.unique(np.logspace(0, np.log10(1900000), 400, dtype=int))
-    variance_v = np.zeros(block_sizes_v.shape)
+    variances_from_blocking = np.zeros((block_sizes_v.shape[0], len(var_names)))
 
-    # Compute standard deviation for each block size
-    for i, block_size in enumerate(block_sizes_v):
-        variance_v[i] = blocking(data[:, 1], block_size)
+    var_means = []
+    var_stds = [] 
+    for var_index, (var_name, var_array) in enumerate(zip(var_names, var_arrays)):
+        # Compute mean
+        var_mean = np.mean(var_array)
+        var_means.append(var_mean)
+
+        # Compute standard deviation for each block size
+        for i, block_size in enumerate(block_sizes_v):
+            variances_from_blocking[i, var_index] = blocking(var_array, block_size)
         
+        # Find numerical derivative
+        der_v = numerical_derivative(
+                np.array([block_sizes_v, variances_from_blocking[:, var_index]]).T,  # Convert to shape (N, 2)
+            locality=args.locality,
+            data_scale = "logxy"
+        )
 
-    print(f"m_y = {np.mean(data[:, 1])}")
+        # Create spline of such derivative
+        der_f = CubicSpline(der_v[:, 0], der_v[:, 1])    
+        # Find zeros of such derivative
+        zeros_der = 10**der_f.roots()
+        # Take such zero as max_block_size to use for fit                
+        max_block_size = zeros_der[0]
+
+        # Fit
+        # Initial guess for parameters
+        a = max(variances_from_blocking[:, var_index])
+        b = (variances_from_blocking[3, var_index] / (a * block_sizes_v[3]**(1/2)))
+        m = 1 
+        p0 = [a, b, m]
+        print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
+        # Use the max_block_size found with 0 of the derivative
+        mask = block_sizes_v < max_block_size
+        # Fitting procedure
+        popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[:, var_index][mask], p0=p0, maxfev = 4000)
+        a, b, m = popt
+        # Compute residuals and plot parameters with their std devs
+        residuals = (fit_function(block_sizes_v, a, b, m) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
+        std_devs_fit = np.sqrt(np.diag(pcov))
+        print(f"A = {a} ± {std_devs_fit[0]}, b = {b} ± {std_devs_fit[1]}, m = {m} ± {std_devs_fit[2]}")
+        print(f"Covariance matrix:\n{pcov}")
+
+        # Take the sqrt of a as an estimation of the plateau
+        var_stds.append(np.sqrt(a))
+
+        # Managing the plot name
+
+        #plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], der_v, der_f, residuals, mask, popt, plot_name, filename, variable_name, std_dev)  
     
-    
-    der_v = numerical_derivative(
-        np.array([block_sizes_v, variance_v]).T,  # Convert to shape (N, 2)
-        locality=5,
-        data_scale = "logxy"
-    )
-        
-    der_f = CubicSpline(der_v[:, 0], der_v[:, 1])    
-    zeros_der = 10**der_f.roots()
-    print(zeros_der)
-                        
-
-    # Fit parameters
-    variable_name = "$m_y$"
-    a = max(variance_v)
-    b = (variance_v[3] / (a * block_sizes_v[3]**(1/2)))
-    m = 1 
-    p0 = [a, b, m]
-    print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
-    max_block_size = zeros_der[0]
-    mask = block_sizes_v < max_block_size
-    popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variance_v[mask], p0=p0, maxfev = 4000)
-    a, b, m = popt
-    residuals = (fit_function(block_sizes_v, a, b, m) - variance_v) / variance_v
-    std_dev = np.sqrt(np.diag(pcov))
-    print(f"A = {a} ± {std_dev[0]}, b = {b} ± {std_dev[1]}, m = {m} ± {std_dev[2]}")
-    print(f"Covariance matrix:\n{pcov}")
-    plot_blocking_results(block_sizes_v, variance_v, der_v, der_f, residuals, mask, popt, plot_name, filename, variable_name, std_dev)  
-
+    print(var_means, var_stds)
