@@ -41,7 +41,7 @@ int main(int argc, char * argv[]) {
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
     char data_format[MAX_LENGTH], seed[MAX_LENGTH];
-    int lattice_side, sample;
+    int lattice_side, sample, printing_step;
     double beta, alpha, epsilon;
     fprintf(stdout, "### Parameters of the simulation:\n");
     // Type of data format of the output .dat file
@@ -117,6 +117,18 @@ int main(int argc, char * argv[]) {
     param_found = read_parameter(inp_file, param_name, param_type, &epsilon);
     if (param_found==1) {
         fprintf(stdout, "%s = %lf\n", param_name, epsilon);
+    } else {
+        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
+        fprintf(stdout, "Simulation aborted!\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    // printing_step = number of step of printing in the file
+    strcpy(param_name, "printing_step");
+    strcpy(param_type, "%d");
+    param_found = read_parameter(inp_file, param_name, param_type, &printing_step);
+    if (param_found==1) {
+        fprintf(stdout, "%s = %d\n", param_name, printing_step);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -233,15 +245,17 @@ int main(int argc, char * argv[]) {
                         s_new = lattice[i][j][k];
                         E_per_site = energy_per_site(lattice, lattice_side);
                         magn = magnetization(lattice, lattice_side);
-                        if (strcmp(data_format, "complete")==0) {
-                            fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
-                        }
-                        if (strcmp(data_format, "minimal")==0) {
-		            // To write in a binary we use fwrite()
-                            fwrite(&magn->sx, sizeof(double), 1, data);
-		            fwrite(&magn->sy, sizeof(double), 1, data);
-			    fwrite(&E_per_site, sizeof(double), 1, data);
-                        }
+			if (step%printing_step==0) {
+                            if (strcmp(data_format, "complete")==0) {
+                                fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                            }
+                            if (strcmp(data_format, "minimal")==0) {
+		                // To write in a binary we use fwrite()
+                                fwrite(&magn->sx, sizeof(double), 1, data);
+		                fwrite(&magn->sy, sizeof(double), 1, data);
+			        fwrite(&E_per_site, sizeof(double), 1, data);
+                            }
+			}
                         step +=1;
                     }
                 }
@@ -258,14 +272,16 @@ int main(int argc, char * argv[]) {
                         s_new = lattice[i][j][k];
                         E_per_site = energy_per_site(lattice, lattice_side);
                         magn = magnetization(lattice, lattice_side);
-                        if (strcmp(data_format, "complete")==0) {
-                            fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
-                        }
-                        if (strcmp(data_format, "minimal")==0) {
-		            // To write in a binary we use fwrite()
-                            fwrite(&magn->sx, sizeof(double), 1, data);
-		            fwrite(&magn->sy, sizeof(double), 1, data);
-			    fwrite(&E_per_site, sizeof(double), 1, data);
+			if (step%printing_step==0) {
+                            if (strcmp(data_format, "complete")==0) {
+                                fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                            }
+                            if (strcmp(data_format, "minimal")==0) {
+		                // To write in a binary we use fwrite()
+                                fwrite(&magn->sx, sizeof(double), 1, data);
+		                fwrite(&magn->sy, sizeof(double), 1, data);
+			        fwrite(&E_per_site, sizeof(double), 1, data);
+                            }
 			}
 			step +=1;
                     }
