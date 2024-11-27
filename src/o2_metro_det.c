@@ -243,9 +243,9 @@ int main(int argc, char * argv[]) {
                         s_old = lattice[i][j][k];
                         micro_acc += microcanonical(lattice, i, j, k, lattice_side);
                         s_new = lattice[i][j][k];
-                        E_per_site = energy_per_site(lattice, lattice_side);
-                        magn = magnetization(lattice, lattice_side);
 			if (step%printing_step==0) {
+                            E_per_site = energy_per_site(lattice, lattice_side);
+                            magn = magnetization(lattice, lattice_side);
                             if (strcmp(data_format, "complete")==0) {
                                 fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
                             }
@@ -270,9 +270,9 @@ int main(int argc, char * argv[]) {
                         s_old = lattice[i][j][k];
                         metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);
                         s_new = lattice[i][j][k];
-                        E_per_site = energy_per_site(lattice, lattice_side);
-                        magn = magnetization(lattice, lattice_side);
 			if (step%printing_step==0) {
+                            E_per_site = energy_per_site(lattice, lattice_side);
+                            magn = magnetization(lattice, lattice_side);
                             if (strcmp(data_format, "complete")==0) {
                                 fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
                             }
