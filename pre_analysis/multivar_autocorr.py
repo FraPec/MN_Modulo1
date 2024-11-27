@@ -81,8 +81,6 @@ class TimeSeries_to_autocorr_lag_h:
         return autocov_matrix
 
     
-    
-    @timeit('single_lag_autocorr_timing_log.txt')
     def autocorrelation_matrix(self, h=0):
         """
         Calculates the autocorrelation matrix at lag h.
@@ -141,7 +139,7 @@ if __name__ == '__main__':
     os.makedirs(export_path, exist_ok=True)
 
     lattice_side_v = [10, 20, 30, 40, 50, 60, 70]
-    beta_v = [0.3, 0.4, 0.5, 0.6]
+    beta_v = [0.1, 0.3, 0.4, 0.5, 0.6, 0.8]
     alpha_v = [0.001, 0.01, 0.1, 1]
     
     # Iterazione sui parametri

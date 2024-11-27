@@ -50,7 +50,7 @@ if __name__ == '__main__':
     print(f"Directory '{export_path}' creata.")
     
     lattice_side_v = [10, 20, 30, 40, 50, 60, 70]
-    beta_v = [0.3, 0.4, 0.5, 0.6]
+    beta_v = [0.1, 0.3, 0.4, 0.5, 0.6, 0.8]
     alpha_v = [0.001, 0.01, 0.1, 1]
     
     for lattice_side in lattice_side_v:
