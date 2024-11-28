@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from joblib import Parallel, delayed
 import time
 from functools import wraps
+import argparse
 
 def timeit(file_path="timing_results.txt"):
     """Decorator to measure the execution time of a function and log it to a file."""
@@ -21,8 +22,6 @@ def timeit(file_path="timing_results.txt"):
         return wrapper
     return decorator
     
-    
-
 def load_binary_file(filepath, n_cols):
     """
     Loads a binary file containing three columns of float64 data into a 2D NumPy array.
@@ -39,9 +38,6 @@ def load_binary_file(filepath, n_cols):
     
     data = data.reshape(-1, n_cols)  # Reshape to have 3 columns
     return data   
-    
-
-
 
 class TimeSeries_to_autocorr_lag_h:
     def __init__(self, data):
@@ -63,7 +59,6 @@ class TimeSeries_to_autocorr_lag_h:
         self.variances = np.diag(self.autocov_matrix_0)
         self.stddev = np.sqrt(self.variances)
         self.stddev_matrix = np.outer(self.stddev, self.stddev)
-
    
     def autocovariance_matrix(self, h=0):
         """
@@ -79,7 +74,6 @@ class TimeSeries_to_autocorr_lag_h:
         data_t_h = self.centered_data[h:self.N]
         autocov_matrix = np.dot(data_t.T, data_t_h) / T
         return autocov_matrix
-
     
     def autocorrelation_matrix(self, h=0):
         """
@@ -91,8 +85,6 @@ class TimeSeries_to_autocorr_lag_h:
         autocov_matrix = self.autocovariance_matrix(h)
         autocorr_matrix = autocov_matrix / self.stddev_matrix
         return autocorr_matrix
-
-    
     
     @timeit('full_lags_autocorr_timing_log.txt')
     def compute_autocorrelations(self, max_lag):
@@ -119,7 +111,7 @@ class TimeSeries_to_autocorr_lag_h:
         # Compute the autocorrelation matrices
         autocorr_matrices = self.compute_autocorrelations(max_lag)
 
-        with open(filename, "a") as file:
+        with open(filename, "w") as file:
             # Add column names as a header if provided
             if column_names:
                 header = "# Columns: " + ", ".join(column_names) + "\n"
@@ -131,33 +123,32 @@ class TimeSeries_to_autocorr_lag_h:
                 np.savetxt(file, [flattened_matrix], fmt='%0.12f', delimiter=" ")
         return
 
-
-
 if __name__ == '__main__':
-    import_path = "pre_analysis_data/data/"
-    export_path = "pre_analysis_data/pre_analysis_autocorr/"
+    # Section to deal with command lines from terminal
+    parser = argparse.ArgumentParser(description="Program to compute autocorrelation for a set of files in a folder")
+    parser.add_argument("--import_path", type=str, required=True,
+            help="Folder in which all the files are stored")
+    parser.add_argument("--export_path", type=str, default="export_path/",
+            help="Folder in which all the computed autocorrelations will be stored")
+    parser.add_argument("--max_lag", type=int, required=True,
+            help="Max autocorrelation lag")
+    args = parser.parse_args()
+    import_path = args.import_path
+    export_path = args.export_path
+    current_max_lag = args.max_lag
     os.makedirs(export_path, exist_ok=True)
 
-    lattice_side_v = [10, 20, 30, 40, 50, 60, 70]
-    beta_v = [0.1, 0.3, 0.4, 0.5, 0.6, 0.8]
-    alpha_v = [0.001, 0.01, 0.1, 1]
-    
-    # Iterazione sui parametri
-    for lattice_side in lattice_side_v:
-        current_dir = os.path.join(import_path, "lattice" + str(lattice_side))  # Corretto senza '/'
-        for beta in beta_v:
-            for alpha in alpha_v:
-                output_file = os.path.join(
-                    export_path, f"L{lattice_side}_b{beta}_a{alpha}_autocorr.txt"
-                )
-                # Verifica se il file esiste e, in caso affermativo, eliminalo
-                if os.path.exists(output_file):
-                    os.remove(output_file)
-                current_file = os.path.join(current_dir, f"data_b{beta}_a{alpha}_L{lattice_side}.dat")
-                data = load_binary_file(current_file, 3)
-                magns_per_site = data[:,0:2]
-                analyzer = TimeSeries_to_autocorr_lag_h(magns_per_site)
-                current_max_lag = int(analyzer.N / 2)
-                analyzer.print_to_file(output_file, current_max_lag, column_names=["autocorr_XX", "autocorr_XY", "autocorr_YX", "autocorr_YY"])
-    
+    for file_name in os.listdir(import_path):
+        file_path = os.path.join(import_path, file_name)
+        # Check if it has a .dat or .bin extension
+        if file_name.endswith(('.dat', '.bin')):
+            base_name, ext = os.path.splitext(file_name) # split filename from its extension
+            output_file = os.path.join(
+                    export_path, base_name + '_autocorr.txt'
+            )
+            data = load_binary_file(file_path, 3)
+            magns_per_site = data[:,:2]
+            analyzer = TimeSeries_to_autocorr_lag_h(magns_per_site)
+            analyzer.print_to_file(output_file, current_max_lag, 
+                    column_names=["autocorr_XX", "autocorr_XY", "autocorr_YX", "autocorr_YY"])
 
