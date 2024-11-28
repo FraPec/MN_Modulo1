@@ -46,8 +46,7 @@ class TimeSeries_to_autocorr_lag_h:
 
         :param data: ndarray of shape (N, n), where N is the number of observations and n is the number of variables.
         """
-        # Convert data to float32 for efficiency
-        self.data = data.astype(np.float32)
+        self.data = data
         self.N, self.n = self.data.shape
         self.mean = np.mean(self.data, axis=0)
         self.centered_data = self.data - self.mean  # Center the data by subtracting the mean
