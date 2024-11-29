@@ -40,7 +40,8 @@ int main(int argc, char * argv[]) {
     /////////////////////////////////////////////////////////////////
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
-    int lattice_side, sample, printing_step;
+    long int sample;
+    int lattice_side, printing_step;
     double beta, alpha, epsilon;
     char data_format[MAX_LENGTH], seed[MAX_LENGTH];
     fprintf(stdout, "### Parameters of the simulation:\n");
@@ -76,10 +77,10 @@ int main(int argc, char * argv[]) {
     }
     // sample = number of data we want to collect
     strcpy(param_name, "sample");
-    strcpy(param_type, "%d");
+    strcpy(param_type, "%ld");
     param_found = read_parameter(inp_file, param_name, param_type, &sample);
     if (param_found==1) {
-        fprintf(stdout, "%s = %d\n", param_name, sample);
+        fprintf(stdout, "%s = %ld\n", param_name, sample);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -200,7 +201,8 @@ int main(int argc, char * argv[]) {
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
-    int step=0, Vol, i, j, k, l, m, n, metro=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
+    long int step=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
+    int Vol, i, j, k, l, m, n, metro=0;
     Vol = lattice_side * lattice_side * lattice_side;
     double random_n, E_per_site;
     char type_of_update[MAX_LENGTH];
@@ -256,7 +258,7 @@ int main(int argc, char * argv[]) {
             E_per_site = energy_per_site(lattice, lattice_side);
             magn = magnetization(lattice, lattice_side);
             if (strcmp(data_format, "complete")==0) {
-                fprintf(data, "%d %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                fprintf(data, "%ld %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
             }
             if (strcmp(data_format, "minimal")==0) {
 	        // To write in a binary we use fwrite()
@@ -266,9 +268,9 @@ int main(int argc, char * argv[]) {
 	    }
         }
     }
-    fprintf(stdout, "\nSimulation ended.\nTotal steps: %d\n", sample);
-    fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %d, %d, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
-    fprintf(stdout, "Microcanonical steps performed and accepted: %d, %d\n", micro_steps, micro_acc);
+    fprintf(stdout, "\nSimulation ended.\nTotal steps: %ld\n", sample);
+    fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %ld, %ld, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
+    fprintf(stdout, "Microcanonical steps performed and accepted: %ld, %ld\n", micro_steps, micro_acc);
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);
