@@ -55,8 +55,8 @@ beta_values[$total_values - 1]=0.8
 echo "Combined and sorted beta values:"
 echo "${beta_values[@]}"
 
-alpha_values=0.3
-lattice_side_values=(10 20 30 40 50 60 70)
+alpha_values=1.0
+lattice_side_values=(10 20 30 40 50)
 # Counter to track the number of running processes
 proc_count=0
 
@@ -80,19 +80,20 @@ for lattice_side in "${lattice_side_values[@]}"; do
 
             # Define filenames within their respective folders
             input_file="inputs/lattice${lattice_side}/input_b${beta}_a${alpha}_L${lattice_side}.in"
-            data_file="data/lattice${lattice_side}/data_b${beta}_a${alpha}_L${lattice_side}.dat"
+            data_file="data/lattice${lattice_side}/data_b${beta}_a${alpha}_L${lattice_side}.bin"
             output_file="outputs/lattice${lattice_side}/output_b${beta}_a${alpha}_L${lattice_side}.out"
 
             # Generate the input file for this run
             cat > "$input_file" <<EOF
 lattice_side $lattice_side
 seed time
-sample 300000000   
+sample $((lattice_side * lattice_side * lattice_side * 30000))   
 output_data_format minimal
 beta $beta
 alpha $alpha
-epsilon 0.4 
-printing_step 300
+epsilon 0.1 
+printing_step $((lattice_side * lattice_side * lattice_side))
+verbose false
 EOF
 
             # Run the simulation in the background, redirecting stdout to output file
