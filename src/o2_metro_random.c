@@ -39,8 +39,8 @@ int main(int argc, char * argv[]) {
     // Let's extract all the useful parameters from the input file //
     /////////////////////////////////////////////////////////////////
     int param_found = 0;
-    char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
-    long int sample;
+    char param_name[MAX_LENGTH], param_type[MAX_LENGTH], verbose[MAX_LENGTH];
+    unsigned long int sample;
     int lattice_side, printing_step;
     double beta, alpha, epsilon;
     char data_format[MAX_LENGTH], seed[MAX_LENGTH];
@@ -63,6 +63,25 @@ int main(int argc, char * argv[]) {
         fclose(inp_file);
         return EXIT_SUCCESS;
     }
+    // Type of verbosity
+    strcpy(param_name, "verbose");
+    strcpy(param_type, "%s");
+    param_found = read_parameter(inp_file, param_name, param_type, &verbose);
+    if (param_found==1) {
+        fprintf(stdout, "%s = %s\n", param_name, verbose);
+        if (strcmp(verbose, "true")!=0 && strcmp(verbose, "false")!=0) {
+            fprintf(stdout, "Invalid type of verbosity choosen for the file! Valid keywords: 'true' and 'false'.\n");
+            fprintf(stdout, "Simulation aborted!\n");
+            fclose(inp_file);
+            return EXIT_SUCCESS;
+        }
+    } else {
+        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
+        fprintf(stdout, "Simulation aborted!\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    
     // lattice_side = side of the 3D square lattice
     strcpy(param_name, "lattice_side");
     strcpy(param_type, "%d");
@@ -77,10 +96,10 @@ int main(int argc, char * argv[]) {
     }
     // sample = number of data we want to collect
     strcpy(param_name, "sample");
-    strcpy(param_type, "%ld");
+    strcpy(param_type, "%lu");
     param_found = read_parameter(inp_file, param_name, param_type, &sample);
     if (param_found==1) {
-        fprintf(stdout, "%s = %ld\n", param_name, sample);
+        fprintf(stdout, "%s = %lu\n", param_name, sample);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -201,7 +220,7 @@ int main(int argc, char * argv[]) {
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
-    long int step=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
+    unsigned long int step=0, metro_acc=0, micro_acc=0, metro_steps=0, micro_steps=0;
     int Vol, i, j, k, l, m, n, metro=0;
     Vol = lattice_side * lattice_side * lattice_side;
     double random_n, E_per_site;
@@ -217,11 +236,15 @@ int main(int argc, char * argv[]) {
             random_n = myrand();
             if (random_n<epsilon) { // if such number is less than epsilon then the next L^3
                 metro=1;  // steps are metropolis, otherwise they are microcanonical
-                fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
+	        if (strcmp(verbose, "true")==0) {
+                    fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
+                }
                 strcpy(type_of_update, "metropolis");
             } else {
                 metro=0; // microcanonical steps
-                fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
+	        if (strcmp(verbose, "true")==0) {
+                    fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
+                }
                 strcpy(type_of_update, "microcanonical");
             }
             // normalization of all the sites after a complete update of the lattice
@@ -232,7 +255,9 @@ int main(int argc, char * argv[]) {
                     }
                 }
             }
-            fprintf(stdout, "Normalization has been performed!\n");
+	    if (strcmp(verbose, "true")==0) {
+                fprintf(stdout, "Normalization has been performed!\n");
+            }
         }
         // Generation of 3 random indexes to obtain lattice site
         random_n = myrand();
@@ -258,7 +283,7 @@ int main(int argc, char * argv[]) {
             E_per_site = energy_per_site(lattice, lattice_side);
             magn = magnetization(lattice, lattice_side);
             if (strcmp(data_format, "complete")==0) {
-                fprintf(data, "%ld %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
+                fprintf(data, "%lu %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
             }
             if (strcmp(data_format, "minimal")==0) {
 	        // To write in a binary we use fwrite()
@@ -268,9 +293,9 @@ int main(int argc, char * argv[]) {
 	    }
         }
     }
-    fprintf(stdout, "\nSimulation ended.\nTotal steps: %ld\n", sample);
-    fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %ld, %ld, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
-    fprintf(stdout, "Microcanonical steps performed and accepted: %ld, %ld\n", micro_steps, micro_acc);
+    fprintf(stdout, "\nSimulation ended.\nTotal steps: %lu\n", sample);
+    fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %lu, %lu, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
+    fprintf(stdout, "Microcanonical steps performed and accepted: %lu, %lu\n", micro_steps, micro_acc);
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);

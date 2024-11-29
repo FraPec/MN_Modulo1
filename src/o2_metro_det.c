@@ -63,7 +63,7 @@ int main(int argc, char * argv[]) {
         fclose(inp_file);
         return EXIT_SUCCESS;
     }
-    // Type of data format of the output .dat file
+    // Type of verbosity
     strcpy(param_name, "verbose");
     strcpy(param_type, "%s");
     param_found = read_parameter(inp_file, param_name, param_type, &verbose);
