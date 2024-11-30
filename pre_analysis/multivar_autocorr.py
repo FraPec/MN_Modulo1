@@ -143,7 +143,7 @@ if __name__ == '__main__':
         if file_name.endswith(('.dat', '.bin')):
             base_name, ext = os.path.splitext(file_name) # split filename from its extension
             output_file = os.path.join(
-                    export_path, base_name + '_autocorr.txt'
+                    export_path, base_name + '_autocorr_magn.txt'
             )
             data = load_binary_file(file_path, 3)
             magns_per_site = data[:,:2]
@@ -151,3 +151,20 @@ if __name__ == '__main__':
             analyzer.print_to_file(output_file, current_max_lag, 
                     column_names=["autocorr_XX", "autocorr_XY", "autocorr_YX", "autocorr_YY"])
 
+            output_file = os.path.join(
+                    export_path, base_name + '_autocorr_energy.txt'
+            )
+            energy_per_site = data[:, -1]
+            energy_per_site = energy_per_site[:, np.newaxis]
+            analyzer = TimeSeries_to_autocorr_lag_h(energy_per_site)
+            analyzer.print_to_file(output_file, current_max_lag, 
+                    column_names=["autocorr_energy"])
+
+            output_file = os.path.join(
+                    export_path, base_name + '_autocorr_sq_mod.txt'
+            )
+            sq_mod = np.linalg.norm(data[:, :2], axis=1)**2
+            sq_mod = sq_mod[:, np.newaxis]
+            analyzer = TimeSeries_to_autocorr_lag_h(sq_mod)
+            analyzer.print_to_file(output_file, current_max_lag, 
+                    column_names=["squared_modulus_m"])
