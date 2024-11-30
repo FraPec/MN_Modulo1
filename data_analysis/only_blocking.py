@@ -45,7 +45,7 @@ if __name__ == "__main__":
     
     # Load and preprocess data
     data = load_binary_file(data_filename, 3)
-    data = data[int(1e5):int(4e6), :]
+    data = data[int(5e3):, :]
     N = data.shape[0]
     print(data.shape)
     # Generate a list of all the variables to compute
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         raise ValueError("Something wrong happened with modules to the fourth power")
 
     # Generate block sizes
-    block_sizes_v = np.unique(np.logspace(0, np.log10(1900000), 400, dtype=int))
+    block_sizes_v = np.unique(np.logspace(0, np.log10(N/2), 400, dtype=int))
     variances_from_blocking = np.zeros((block_sizes_v.shape[0], data_arrays.shape[1]))
 
 
