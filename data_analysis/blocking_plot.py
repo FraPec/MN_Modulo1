@@ -4,6 +4,7 @@ from scipy.interpolate import CubicSpline
 import numpy as np
 import matplotlib.pyplot as plt
 import argparse
+import os
 
 def numerical_derivative(data, locality=1, data_scale='linear'):
     # Check if locality is too large for the given dataset
@@ -114,28 +115,31 @@ if __name__ == "__main__":
     plot_name = args.plot_name
 
     # Load and preprocess data
-    data = np.loadtxt(filename)
-    N = data.shape[0]
+    blocking_data = np.loadtxt(filename, skiprows=3)
+    block_sizes_v = blocking_data[:, 0]
+    variances_from_blocking = blocking_data[:, 1:]
+    N = variances_from_blocking.shape[0]
 
     # Generate a list of all the variables to compute
-    var_names = [r"blocksize", r"$m_x$", r"$m_y$", r"$E$", r"$|\vec{m}|$", r"$|\vec{m}|^2$",  r"$|\vec{m}|^4$"]
-    var_arrays = [data[:, i] for i in range(data.shape[1])]
+    var_names = [r"$m_x$", r"$m_y$", r"$E$", r"$|\vec{m}|$", r"$|\vec{m}|^2$",  r"$|\vec{m}|^4$"]
+    var_arrays = [variances_from_blocking[:, i] for i in range(variances_from_blocking.shape[1])]
+    var_stds = []
 
     for var_index, (var_name, var_array) in enumerate(zip(var_names, var_arrays)):
         # Find numerical derivative
         der_v = numerical_derivative(
                 np.array([block_sizes_v, variances_from_blocking[:, var_index]]).T,  # Convert to shape (N, 2)
-            locality=args.locality,
-            data_scale = "logxy"
+                locality=args.locality,
+                data_scale = "logxy"
         )
 
         # Create spline of such derivative
         der_f = CubicSpline(der_v[:, 0], der_v[:, 1])    
         # Find zeros of such derivative
-        zeros_der = 10**der_f.roots()
+        zeros_der = der_f.roots()
         # Take such zero as max_block_size to use for fit                
         max_block_size = zeros_der[0]
-
+        print(der_v)
         # Fit
         # Initial guess for parameters
         a = max(variances_from_blocking[:, var_index])
@@ -144,9 +148,10 @@ if __name__ == "__main__":
         p0 = [a, b, m]
         print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
         # Use the max_block_size found with 0 of the derivative
-        mask = block_sizes_v < max_block_size
+        mask = np.log10(block_sizes_v) < max_block_size
+        print(block_sizes_v[mask], variances_from_blocking[mask, var_index])
         # Fitting procedure
-        popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[:, var_index][mask], p0=p0, maxfev = 4000)
+        popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[mask, var_index], p0=p0, maxfev = 4000)
         a, b, m = popt
         # Compute residuals and plot parameters with their std devs
         residuals = (fit_function(block_sizes_v, a, b, m) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
@@ -156,8 +161,8 @@ if __name__ == "__main__":
 
         # Take the sqrt of a as an estimation of the plateau
         var_stds.append(np.sqrt(a))
-
+        base_name, extension = os.path.splitext(plot_name)
+        plot_name_current_var = base_name + var_name + ".png"
         # Managing the plot name
-
-        plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], der_v, der_f, residuals, mask, popt, plot_name, filename, variable_name, std_dev)  
+        plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], der_v, der_f, residuals, mask, popt, plot_name_current_var, filename, var_name, var_stds[var_index])  
     
