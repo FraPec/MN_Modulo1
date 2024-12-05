@@ -77,7 +77,6 @@ if __name__ == "__main__":
     block_sizes_v = np.unique(np.logspace(0, np.log10(N/2), 400, dtype=int))
     variances_from_blocking = np.zeros((block_sizes_v.shape[0], data_arrays.shape[1]))
 
-
     means = []
     for index in range(data_arrays.shape[1]):
         # Compute mean
@@ -88,9 +87,12 @@ if __name__ == "__main__":
         for i, block_size in enumerate(block_sizes_v):
             variances_from_blocking[i, index] = blocking(data_arrays[:, index], block_size)
 
+    means = [0.] + means
     means = np.array(means)
+    print(means, means.shape)
     means = means[np.newaxis, :]
     print(means.shape, variances_from_blocking.shape)
+    variances_from_blocking = np.hstack((block_sizes_v[:, np.newaxis], variances_from_blocking))
     array_to_save = np.vstack((means, variances_from_blocking))
     np.savetxt(filename, array_to_save, 
             header="var_mx, var_my, var_E, var_|m|, var_|m|^2, var_|m|^4\nFirst line has the 6 means of the values")

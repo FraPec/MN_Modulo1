@@ -19,10 +19,10 @@ for input_file in "$INPUT_FOLDER"/*; do
     base_name=$(basename "$input_file")
     
     # Define the output file path
-    output_file="$OUTPUT_FOLDER/$base_name.txt"
+    output_file="$OUTPUT_FOLDER/$base_name"
 
     # Run the Python script for each file
-    python3 only_blocking.py --input_datafile "$input_file" --output_datafile "$output_file"
+    python3 blocking.py --input_datafile "$input_file" --output_datafile "$output_file"
 
     # Check if the script executed successfully
     if [ $? -eq 0 ]; then
