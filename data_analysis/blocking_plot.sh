@@ -22,7 +22,7 @@ for input_file in "$INPUT_FOLDER"/*; do
     output_file="$OUTPUT_FOLDER/$base_name"
 
     # Run the Python script for each file
-    python3 blocking_plot.py --input_datafile "$input_file" --plot_name "$output_file" --locality 5
+    python3 blocking_plot.py --input_datafile "$input_file" --plot_name "$output_file" --max_block_size 10000 --txt_file file.txt
 
     # Check if the script executed successfully
     if [ $? -eq 0 ]; then
