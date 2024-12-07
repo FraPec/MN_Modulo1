@@ -60,40 +60,52 @@ if __name__ == "__main__":
     max_block_size = args.max_block_size
 
     # Load and preprocess data
-    blocking_data = np.loadtxt(filename, skiprows=3)
-    block_sizes_v = blocking_data[:, 0]
-    variances_from_blocking = blocking_data[:, 1:]
+    blocking_data = np.loadtxt(filename, skiprows=2)
+    means = blocking_data[0, 1:]
+    block_sizes_v = blocking_data[1:, 0]
+    variances_from_blocking = blocking_data[1:, 1:]
     N = variances_from_blocking.shape[0]
 
     # Generate a list of all the variables to compute
     var_names = [r"$m_x$", r"$m_y$", r"$E$", r"$|\vec{m}|$", r"$|\vec{m}|^2$",  r"$|\vec{m}|^4$"]
     var_arrays = [variances_from_blocking[:, i] for i in range(variances_from_blocking.shape[1])]
     variances = []
-
-    for var_index, (var_name, var_array) in enumerate(zip(var_names, var_arrays)):
-
-        # Fit
-        # Initial guess for parameters
-        a = max(variances_from_blocking[:, var_index])
-        b = (variances_from_blocking[3, var_index] / (a * block_sizes_v[3]**(1/2)))
-        m = 1 
-        p0 = [a, b, m]
-        print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
-        # Use the max_block_size found with 0 of the derivative
-        mask = block_sizes_v < max_block_size
-        # Fitting procedure
-        popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[mask, var_index], p0=p0, maxfev = 4000)
-        a, b, m = popt
-        # Compute residuals and plot parameters with their std devs
-        residuals = (fit_function(block_sizes_v, a, b, m) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
-        std_devs_fit = np.sqrt(np.diag(pcov))
-        print(f"A = {a} ± {std_devs_fit[0]}, b = {b} ± {std_devs_fit[1]}, m = {m} ± {std_devs_fit[2]}")
-        print(f"Covariance matrix:\n{pcov}")
-
-        # Take the sqrt of a as an estimation of the plateau
-        variances.append(a)
-        base_name, extension = os.path.splitext(plot_name)
-        plot_name_current_var = base_name + var_name + ".png"
-        # Managing the plot name
-        plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], residuals, mask, popt, plot_name_current_var, filename, var_name)  
+   
+    if not os.path.exists(args.txt_file):
+        write_title_string = True
+    else:
+        write_title_string = False
     
+    with open(args.txt_file, "a") as file:
+        if write_title_string:
+            file.write(f"# FILE: {filename}\n# variable_name, mean, variance\n")
+
+        for var_index, (var_name, var_array) in enumerate(zip(var_names, var_arrays)):
+
+            # Fit
+            # Initial guess for parameters
+            a = max(variances_from_blocking[:, var_index])
+            b = (variances_from_blocking[3, var_index] / (a * block_sizes_v[3]**(1/2)))
+            m = 1 
+            p0 = [a, b, m]
+            print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
+            # Use the max_block_size found with 0 of the derivative
+            mask = block_sizes_v < max_block_size
+            # Fitting procedure
+            popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[mask, var_index], p0=p0, maxfev = 4000)
+            a, b, m = popt
+            # Compute residuals and plot parameters with their std devs
+            residuals = (fit_function(block_sizes_v, a, b, m) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
+            std_devs_fit = np.sqrt(np.diag(pcov))
+            print(f"A = {a} ± {std_devs_fit[0]}, b = {b} ± {std_devs_fit[1]}, m = {m} ± {std_devs_fit[2]}")
+            print(f"Covariance matrix:\n{pcov}")
+
+            # Take the sqrt of a as an estimation of the plateau
+            variances.append(a)
+            base_name, extension = os.path.splitext(plot_name)
+            plot_name_current_var = base_name + var_name + ".png"
+            # Managing the plot name
+            plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], residuals, mask, popt, plot_name_current_var, filename, var_name)  
+            
+            file.write(f"{var_name} {means[var_index]} {a}\n")
+

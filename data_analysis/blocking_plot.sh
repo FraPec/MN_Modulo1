@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # Check if the correct number of arguments is provided
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <input_folder> <output_folder>"
+if [ "$#" -ne 3 ]; then
+    echo "Usage: $0 <input_folder> <output_folder> <file_txt>"
     exit 1
 fi
 
 # Get the input and output folder paths from arguments
 INPUT_FOLDER="$1"
 OUTPUT_FOLDER="$2"
+FILE_TXT="$3"
 
 # Create output folder if it doesn't exist
 mkdir -p "$OUTPUT_FOLDER"
@@ -22,7 +23,7 @@ for input_file in "$INPUT_FOLDER"/*; do
     output_file="$OUTPUT_FOLDER/$base_name"
 
     # Run the Python script for each file
-    python3 blocking_plot.py --input_datafile "$input_file" --plot_name "$output_file" --max_block_size 10000 --txt_file file.txt
+    python3 blocking_plot.py --input_datafile "$input_file" --plot_name "$output_file" --max_block_size 5000 --txt_file "$FILE_TXT"
 
     # Check if the script executed successfully
     if [ $? -eq 0 ]; then
