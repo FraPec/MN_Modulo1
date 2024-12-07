@@ -16,7 +16,7 @@ NUM_PROCS="$5"             # Number of processes to run in parallel
 
 rm -f "$FILE_TXT"    # Remove the file if it exists
 echo "# variable_name mean variace beta" > "$FILE_TXT"
-rm -f "$OUTPUT_FOLDER/*"
+rm -f "$OUTPUT_FOLDER"/*
 
 echo "INPUT_FOLDER: $INPUT_FOLDER"
 echo "OUTPUT_FOLDER: $OUTPUT_FOLDER"

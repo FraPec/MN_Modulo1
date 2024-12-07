@@ -96,8 +96,8 @@ if __name__ == "__main__":
             # Fit
             # Initial guess for parameters
             a = max(variances_from_blocking[:, var_index])
-            b = (variances_from_blocking[0, var_index] / (a * block_sizes_v[0]**(1/2)))
             m = 1 
+            b = (variances_from_blocking[0, var_index] / (a * block_sizes_v[0]**m))
             p0 = [a, b, m]
             print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
             # Use the max_block_size found with 0 of the derivative
