@@ -19,7 +19,7 @@ for input_file in "$INPUT_FOLDER"/*; do
     base_name=$(basename "$input_file")
     
     # Define the output file path
-    output_file="$OUTPUT_FOLDER/$base_name"
+    output_file="$OUTPUT_FOLDER/${base_name%.bin}.txt"
 
     # Run the Python script for each file
     python3 blocking.py --input_datafile "$input_file" --output_datafile "$output_file"

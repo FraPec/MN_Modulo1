@@ -1,10 +1,21 @@
+import argparse
+import os
+import re
+import numpy as np
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 from scipy.stats import linregress 
 from scipy.interpolate import CubicSpline
-import numpy as np
-import matplotlib.pyplot as plt
-import argparse
-import os
+
+# Function to extract the value near 'b' in the filename
+def extract_beta_value(filename):
+    # Regular expression to match the pattern 'b' followed by a number (including decimal point)
+    match = re.search(r'b([0-9\.]+)', filename)
+    if match:
+        # Return the value found after 'b'
+        return float(match.group(1))
+    else:
+        return None  # Return None if no match is found
 
 def fit_function(x, a, b, m):
     return a * (1 - np.exp(-b * x**m)) 
@@ -78,14 +89,14 @@ if __name__ == "__main__":
     
     with open(args.txt_file, "a") as file:
         if write_title_string:
-            file.write(f"# FILE: {filename}\n# variable_name, mean, variance\n")
+            file.write(f"# variable_name, mean, variance, beta\n")
 
         for var_index, (var_name, var_array) in enumerate(zip(var_names, var_arrays)):
 
             # Fit
             # Initial guess for parameters
             a = max(variances_from_blocking[:, var_index])
-            b = (variances_from_blocking[3, var_index] / (a * block_sizes_v[3]**(1/2)))
+            b = (variances_from_blocking[0, var_index] / (a * block_sizes_v[0]**(1/2)))
             m = 1 
             p0 = [a, b, m]
             print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
@@ -105,7 +116,8 @@ if __name__ == "__main__":
             base_name, extension = os.path.splitext(plot_name)
             plot_name_current_var = base_name + var_name + ".png"
             # Managing the plot name
-            plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], residuals, mask, popt, plot_name_current_var, filename, var_name)  
+            plot_blocking_results(block_sizes_v, variances_from_blocking[:, var_index], residuals, mask, popt, plot_name_current_var, filename, var_name) 
             
-            file.write(f"{var_name} {means[var_index]} {a}\n")
+            beta = extract_beta_value(filename)
+            file.write(f"{var_name} {means[var_index]} {a} {beta}\n")
 

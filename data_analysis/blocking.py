@@ -89,9 +89,7 @@ if __name__ == "__main__":
 
     means = [0.] + means
     means = np.array(means)
-    print(means, means.shape)
     means = means[np.newaxis, :]
-    print(means.shape, variances_from_blocking.shape)
     variances_from_blocking = np.hstack((block_sizes_v[:, np.newaxis], variances_from_blocking))
     array_to_save = np.vstack((means, variances_from_blocking))
     np.savetxt(filename, array_to_save, 
