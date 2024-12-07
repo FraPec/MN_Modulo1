@@ -17,8 +17,8 @@ def extract_beta_value(filename):
     else:
         return None  # Return None if no match is found
 
-def fit_function(x, a, b, m):
-    return a * (1 - np.exp(-b * x**m)) 
+def fit_function(x, a, b):
+    return a * (1 - np.exp(-b * x)) 
   
 def plot_blocking_results(block_sizes_v, variance_v, residuals, mask, popt, plot_name, datafile_name, variable_name):
     # Create subplots with shared x-axes
@@ -32,7 +32,7 @@ def plot_blocking_results(block_sizes_v, variance_v, residuals, mask, popt, plot
 
     # Plot data and fitted curve on the first subplot
     axs[0].scatter(block_sizes_v, variance_v, marker=".", label="data", zorder=0, color="red")
-    axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b, m), color="blue", label="fitted curve", zorder=1)
+    axs[0].plot(block_sizes_v, fit_function(block_sizes_v, a, b), color="blue", label="fitted curve", zorder=1)
     axs[0].set_ylabel(rf"Var({variable_name}) (k)", fontsize=20)
     axs[0].set_xscale("log")
     axs[0].set_yscale("log")
@@ -96,19 +96,18 @@ if __name__ == "__main__":
             # Fit
             # Initial guess for parameters
             a = max(variances_from_blocking[:, var_index])
-            m = 1 
-            b = (variances_from_blocking[0, var_index] / (a * block_sizes_v[0]**m))
-            p0 = [a, b, m]
-            print(f"Starting parameters: a = {a}, b = {b}, m = {m}")
+            b = (variances_from_blocking[0, var_index] / (a * block_sizes_v[0]))
+            p0 = [a, b]
+            print(f"Starting parameters: a = {a}, b = {b}")
             # Use the max_block_size found with 0 of the derivative
             mask = block_sizes_v < max_block_size
             # Fitting procedure
             popt, pcov = curve_fit(fit_function, block_sizes_v[mask], variances_from_blocking[mask, var_index], p0=p0, maxfev = 4000)
-            a, b, m = popt
+            a, b = popt
             # Compute residuals and plot parameters with their std devs
-            residuals = (fit_function(block_sizes_v, a, b, m) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
+            residuals = (fit_function(block_sizes_v, a, b) - variances_from_blocking[:, var_index]) / variances_from_blocking[:, var_index]
             std_devs_fit = np.sqrt(np.diag(pcov))
-            print(f"A = {a} ± {std_devs_fit[0]}, b = {b} ± {std_devs_fit[1]}, m = {m} ± {std_devs_fit[2]}")
+            print(f"A = {a} ± {std_devs_fit[0]}, b = {b} ± {std_devs_fit[1]}")
             print(f"Covariance matrix:\n{pcov}")
 
             # Take the sqrt of a as an estimation of the plateau
