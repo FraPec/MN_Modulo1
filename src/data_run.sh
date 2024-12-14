@@ -14,49 +14,9 @@ executable="$1"
 # Get the number of available processors
 num_procs="$2"
 
-
-# Total number of values
-total_values=130
-# Number of values in the specific range 0.43 to 0.47
-specific_range_values=30
-
-# Generate values in the specific range from 0.43 to 0.47
-specific_start=0.43
-specific_end=0.47
-specific_step=$(echo "scale=5; ($specific_end - $specific_start) / ($specific_range_values - 1)" | bc)
-specific_values=($(seq $specific_start $specific_step $specific_end))
-
-# Calculate values outside the specific range
-total_other_values=$((total_values - specific_range_values))
-
-# Split other values into two parts: from 0.35 to just below 0.43 and from just above 0.47 to 0.55
-other_start1=0.1
-other_end1=0.429
-other_start2=0.471
-other_end2=0.8
-
-# Calculate the number of values in each of these two other ranges
-# We use ceiling approximation to ensure the total count matches 110
-other_values1=$(echo "($total_other_values / 2)" | bc)
-other_values2=$(($total_other_values - other_values1))
-
-other_step1=$(echo "scale=5; ($other_end1 - $other_start1) / ($other_values1 - 1)" | bc)
-other_step2=$(echo "scale=5; ($other_end2 - $other_start2) / ($other_values2 - 1)" | bc)
-
-# Generate the other values
-other_values1=($(seq $other_start1 $other_step1 $other_end1))
-other_values2=($(seq $other_start2 $other_step2 $other_end2))
-
-# Combine all values and sort
-beta_values=(${other_values1[@]} ${specific_values[@]} ${other_values2[@]})
-beta_values[$total_values - 1]=0.8
-
-# Print combined and sorted beta values
-echo "Combined and sorted beta values:"
-echo "${beta_values[@]}"
-
-alpha_values=1.0
-lattice_side_values=(10 20 30 40 50)
+beta_values=($(seq 0.4 0.001 0.5))
+alpha_values=(1.0)
+lattice_side_values=(5 10 15 20 25)
 # Counter to track the number of running processes
 proc_count=0
 
@@ -72,7 +32,6 @@ for lattice_side in "${lattice_side_values[@]}"; do
     mkdir -p outputs/lattice${lattice_side}
 done
 
-
 # Loop over each combination of beta, alpha, and lattice_side
 for lattice_side in "${lattice_side_values[@]}"; do
     for beta in "${beta_values[@]}"; do
@@ -87,7 +46,7 @@ for lattice_side in "${lattice_side_values[@]}"; do
             cat > "$input_file" <<EOF
 lattice_side $lattice_side
 seed time
-sample $((lattice_side * lattice_side * lattice_side * 30000))   
+sample $((lattice_side * lattice_side * lattice_side * 200000))   
 output_data_format minimal
 beta $beta
 alpha $alpha
