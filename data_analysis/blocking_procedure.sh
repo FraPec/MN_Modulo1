@@ -1,18 +1,20 @@
 #!/bin/bash
 
+data_set="5_25_"
+
 # Base input and output paths for blocking
-input_blocking="data/lattice"
-output_blocking_prefix="blocked_data/lattice"
-log_blocking_prefix="blocking_lattice"
+input_blocking="data${data_set}/lattice"
+output_blocking_prefix="blocked_data${data_set}/lattice"
+log_blocking_prefix="blocking_lattice${data_set}"
 
 # Base paths for blocking plot
-input_plot_prefix="blocked_data/lattice"
-output_plot_prefix="plots/lattice"
-sigma_output_prefix="sigma_outputs/lattice"
-log_blocking_plot_prefix="blocking_plot_lattice"
+input_plot_prefix="blocked_data${data_set}/lattice"
+output_plot_prefix="plots${data_set}/lattice"
+sigma_output_prefix="sigma_outputs${data_set}/lattice"
+log_blocking_plot_prefix="blocking_plot_lattice${data_set}"
 
 # Loop through the desired suffixes
-for suffix in 10 20 30 40 50; do
+for suffix in 5 10 15 20 25; do
     # Run the blocking script
     ./blocking.sh "${input_blocking}${suffix}" "${output_blocking_prefix}${suffix}" > "${log_blocking_prefix}${suffix}.out"
 
