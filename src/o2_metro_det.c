@@ -41,8 +41,8 @@ int main(int argc, char * argv[]) {
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
     char data_format[MAX_LENGTH], seed[MAX_LENGTH], verbose[MAX_LENGTH];
-    unsigned long int sample;
-    int lattice_side, printing_step;
+    unsigned long int total_lattice_sweeps;
+    int lattice_side;
     double beta, alpha, epsilon;
     fprintf(stdout, "### Parameters of the simulation:\n");
     // Type of data format of the output .dat file
@@ -95,12 +95,12 @@ int main(int argc, char * argv[]) {
         fclose(inp_file);
         return EXIT_SUCCESS;
     }
-    // sample = number of data we want to collect
-    strcpy(param_name, "sample");
+    // total_lattice_sweeps = number of complete sweeps of the lattice we want to collect
+    strcpy(param_name, "total_lattice_sweeps");
     strcpy(param_type, "%lu");
-    param_found = read_parameter(inp_file, param_name, param_type, &sample);
+    param_found = read_parameter(inp_file, param_name, param_type, &total_lattice_sweeps);
     if (param_found==1) {
-        fprintf(stdout, "%s = %lu\n", param_name, sample);
+        fprintf(stdout, "%s = %lu\n", param_name, total_lattice_sweeps);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -137,18 +137,6 @@ int main(int argc, char * argv[]) {
     param_found = read_parameter(inp_file, param_name, param_type, &epsilon);
     if (param_found==1) {
         fprintf(stdout, "%s = %lf\n", param_name, epsilon);
-    } else {
-        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
-        fprintf(stdout, "Simulation aborted!\n");
-        fclose(inp_file);
-        return EXIT_SUCCESS;
-    }
-    // printing_step = number of step of printing in the file
-    strcpy(param_name, "printing_step");
-    strcpy(param_type, "%d");
-    param_found = read_parameter(inp_file, param_name, param_type, &printing_step);
-    if (param_found==1) {
-        fprintf(stdout, "%s = %d\n", param_name, printing_step);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -222,7 +210,7 @@ int main(int argc, char * argv[]) {
     ////////////////////////////////////
     // Let's start with the for cicle //
     ////////////////////////////////////
-    unsigned long int step=0, micro_acc=0, metro_acc=0, metro_steps=0, micro_steps=0;
+    unsigned long int complete_lattice_sweeps=0, micro_acc=0, metro_acc=0, metro_steps=0, micro_steps=0;
     unsigned long int micro_full_lattice=0, metro_full_lattice=0;
     int Vol, i, j, k, l, m, n, metro=0;
     Vol = lattice_side * lattice_side * lattice_side;
@@ -234,34 +222,32 @@ int main(int argc, char * argv[]) {
         fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my Energy_per_site\n");
     } 
 
-    while (step<sample) {
-        if (step%Vol==0) {
-            // random number generation after a complete update of the lattice
-            random_n = myrand();
-            if (random_n<epsilon) { // if such number is less than epsilon then the next L^3
-                metro=1;  // steps are metropolis, otherwise they are microcanonical
-	        if (strcmp(verbose, "true")==0) {
-                    fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
-                }
-                strcpy(type_of_update, "metropolis");
-            } else {
-                metro=0; // microcanonical steps
-	        if (strcmp(verbose, "true")==0) {
-                    fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
-                }
-                strcpy(type_of_update, "microcanonical");
-            }
-            // normalization of all the sites after a complete update of the lattice
-            for (l=0; l<lattice_side; l++) {
-                for (m=0; m<lattice_side; m++) {
-                    for (n=0; n<lattice_side; n++) {
-                        normalization(&lattice[l][m][n]);
-                    }
-                }
-            }
+    while (complete_lattice_sweeps<total_lattice_sweeps) {
+	// random number generation after a complete update of the lattice
+	random_n = myrand();
+	if (random_n<epsilon) { // if such number is less than epsilon then the next L^3
+	    metro=1;  // steps are metropolis, otherwise they are microcanonical
 	    if (strcmp(verbose, "true")==0) {
-                fprintf(stdout, "Normalization has been performed!\n");
-            }
+	        fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
+	    }
+	    strcpy(type_of_update, "metropolis");
+	} else {
+	    metro=0; // microcanonical steps
+	    if (strcmp(verbose, "true")==0) {
+	        fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
+	    }
+	    strcpy(type_of_update, "microcanonical");
+	}
+	// normalization of all the sites after a complete update of the lattice
+	for (l=0; l<lattice_side; l++) {
+	    for (m=0; m<lattice_side; m++) {
+	        for (n=0; n<lattice_side; n++) {
+	            normalization(&lattice[l][m][n]);
+		}
+	    }
+	}
+	if (strcmp(verbose, "true")==0) {
+	    fprintf(stdout, "Normalization has been performed!\n");
 	}
 
         if(metro == 0){
@@ -275,24 +261,22 @@ int main(int argc, char * argv[]) {
                         micro_acc += microcanonical(lattice, i, j, k, lattice_side);
                         micro_steps += 1;
                         s_new = lattice[i][j][k];
-			if (step%printing_step==0) {
-                            E_per_site = energy_per_site(lattice, lattice_side);
-                            magn = magnetization(lattice, lattice_side);
-                            if (strcmp(data_format, "complete")==0) {
-                                fprintf(data, "%lu %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
-                            }
-                            if (strcmp(data_format, "minimal")==0) {
-		                // To write in a binary we use fwrite()
-                                fwrite(&magn->sx, sizeof(double), 1, data);
-		                fwrite(&magn->sy, sizeof(double), 1, data);
-			        fwrite(&E_per_site, sizeof(double), 1, data);
-                            }
-			}
-                        step +=1;
                     }
                 }
             }
 	    percentage_micro_acc += (double)micro_acc / (double)micro_steps;
+	    complete_lattice_sweeps += 1;
+	    E_per_site = energy_per_site(lattice, lattice_side);
+	    magn = magnetization(lattice, lattice_side);
+	    if (strcmp(data_format, "complete")==0) {
+	        fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+	    }
+	    if (strcmp(data_format, "minimal")==0) {
+		// To write in a binary we use fwrite()
+		fwrite(&magn->sx, sizeof(double), 1, data);
+		fwrite(&magn->sy, sizeof(double), 1, data);
+		fwrite(&E_per_site, sizeof(double), 1, data);
+	    }
         }
 
         if(metro == 1){
@@ -306,30 +290,28 @@ int main(int argc, char * argv[]) {
                         metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);
                         metro_steps += 1;
                         s_new = lattice[i][j][k];
-			if (step%printing_step==0) {
-                            E_per_site = energy_per_site(lattice, lattice_side);
-                            magn = magnetization(lattice, lattice_side);
-                            if (strcmp(data_format, "complete")==0) {
-                                fprintf(data, "%lu %d %d %d %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %.15lf %s\n", step, i, j, k, s_old.sx, s_old.sy, s_new.sx, s_new.sy, magn->sx, magn->sy, E_per_site, type_of_update);
-                            }
-                            if (strcmp(data_format, "minimal")==0) {
-		                // To write in a binary we use fwrite()
-                                fwrite(&magn->sx, sizeof(double), 1, data);
-		                fwrite(&magn->sy, sizeof(double), 1, data);
-			        fwrite(&E_per_site, sizeof(double), 1, data);
-                            }
-			}
-			step +=1;
                     }
                 }
             }
 	    percentage_metro_acc += (double)metro_acc / (double)metro_steps;
-        }
+            complete_lattice_sweeps += 1;
+	    E_per_site = energy_per_site(lattice, lattice_side);
+	    magn = magnetization(lattice, lattice_side);
+	    if (strcmp(data_format, "complete")==0) {
+	        fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+	    }
+	    if (strcmp(data_format, "minimal")==0) {
+		// To write in a binary we use fwrite()
+		fwrite(&magn->sx, sizeof(double), 1, data);
+		fwrite(&magn->sy, sizeof(double), 1, data);
+		fwrite(&E_per_site, sizeof(double), 1, data);
+	    }
+	}
     }
 
-    fprintf(stdout, "\nSimulation ended.\nTotal steps: %lu\n", sample);
-    fprintf(stdout, "Metropolis complete sweep of the lattice performed: %lu\nMean of the percentage of acceptance for Metropolis: %lf\n", metro_full_lattice, percentage_metro_acc / (double)metro_full_lattice);
-    fprintf(stdout, "Microcanonical complete sweep of the lattice performed: %lu\nMean of the percentage of acceptance for Microcanonical: %lf\n", micro_full_lattice, percentage_micro_acc / (double)micro_full_lattice);
+    fprintf(stdout, "\nSimulation ended.\nTotal steps: %lu\n", complete_lattice_sweeps);
+    fprintf(stdout, "Metropolis complete sweeps of the lattice performed: %lu\nMean of the percentage of acceptance for Metropolis: %lf\n", metro_full_lattice, percentage_metro_acc / (double)metro_full_lattice);
+    fprintf(stdout, "Microcanonical complete sweeps of the lattice performed: %lu\nMean of the percentage of acceptance for Microcanonical: %lf\n", micro_full_lattice, percentage_micro_acc / (double)micro_full_lattice);
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);
