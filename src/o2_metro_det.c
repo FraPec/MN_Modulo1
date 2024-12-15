@@ -223,9 +223,11 @@ int main(int argc, char * argv[]) {
     // Let's start with the for cicle //
     ////////////////////////////////////
     unsigned long int step=0, micro_acc=0, metro_acc=0, metro_steps=0, micro_steps=0;
+    unsigned long int micro_full_lattice=0, metro_full_lattice=0;
     int Vol, i, j, k, l, m, n, metro=0;
     Vol = lattice_side * lattice_side * lattice_side;
     double random_n, E_per_site;
+    double percentage_micro_acc = 0.0, percentage_metro_acc = 0.0; // Mean percentage of acceptance for micro and metro 
     char type_of_update[MAX_LENGTH];
     DoubleVector2D s_old, s_new, * magn;
     if (strcmp(data_format, "complete")==0) {
@@ -263,12 +265,15 @@ int main(int argc, char * argv[]) {
 	}
 
         if(metro == 0){
+	    micro_full_lattice += 1;
+	    micro_steps = 0;
+	    micro_acc = 0;
             for (i=0; i<lattice_side; i++) {
                 for (j=0; j<lattice_side; j++) {
                     for (k=0; k<lattice_side; k++) {
-                        micro_steps += 1;
                         s_old = lattice[i][j][k];
                         micro_acc += microcanonical(lattice, i, j, k, lattice_side);
+                        micro_steps += 1;
                         s_new = lattice[i][j][k];
 			if (step%printing_step==0) {
                             E_per_site = energy_per_site(lattice, lattice_side);
@@ -287,15 +292,19 @@ int main(int argc, char * argv[]) {
                     }
                 }
             }
+	    percentage_micro_acc += (double)micro_acc / (double)micro_steps;
         }
 
         if(metro == 1){
+	    metro_full_lattice += 1;
+	    metro_steps = 0;
+	    metro_acc = 0;
             for (i=0; i<lattice_side; i++) {
                 for (j=0; j<lattice_side; j++) {
                     for (k=0; k<lattice_side; k++) {
-                        metro_steps += 1;
                         s_old = lattice[i][j][k];
                         metro_acc += local_metropolis(lattice, i, j, k, lattice_side, alpha, beta);
+                        metro_steps += 1;
                         s_new = lattice[i][j][k];
 			if (step%printing_step==0) {
                             E_per_site = energy_per_site(lattice, lattice_side);
@@ -314,12 +323,13 @@ int main(int argc, char * argv[]) {
                     }
                 }
             }
+	    percentage_metro_acc += (double)metro_acc / (double)metro_steps;
         }
     }
 
     fprintf(stdout, "\nSimulation ended.\nTotal steps: %lu\n", sample);
-    fprintf(stdout, "Metropolis steps performed, accepted and accepted/performed: %lu, %lu, %lf\n", metro_steps, metro_acc, (double)metro_acc / (double)metro_steps);
-    fprintf(stdout, "Microcanonical steps performed and accepted: %lu, %lu\n", micro_steps, micro_acc);
+    fprintf(stdout, "Metropolis complete sweep of the lattice performed: %lu\nMean of the percentage of acceptance for Metropolis: %lf\n", metro_full_lattice, percentage_metro_acc / (double)metro_full_lattice);
+    fprintf(stdout, "Microcanonical complete sweep of the lattice performed: %lu\nMean of the percentage of acceptance for Microcanonical: %lf\n", micro_full_lattice, percentage_micro_acc / (double)micro_full_lattice);
     free_lattice(lattice, lattice_side);
     fclose(inp_file);
     fclose(data);
