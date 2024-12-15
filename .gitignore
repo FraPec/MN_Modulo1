@@ -63,3 +63,8 @@ Makefile
 *.png
 *.jpeg
 *.jpg
+
+# folders
+__pycache__/
+simulation*/
+data/
