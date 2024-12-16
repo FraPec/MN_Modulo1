@@ -16,7 +16,8 @@ int main(int argc, char * argv[]) {
    
     // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat
     if (argc!=3) {
-        fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.in datafile\n");
+        fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.inp datafile(.dat or .bin)\n");
+	fprintf(stdout, "Input.inp must be like (do not include ' '):\nlattice_side int\nseed int or 'time'\ntotal_lattice_sweeps int\nprinting_step int\ndata_format 'binary' or 'text'\nbeta double\nalpha double\nepsilon double\nverbose 'false' or 'true'");
         return EXIT_SUCCESS;
     }
 
@@ -41,18 +42,18 @@ int main(int argc, char * argv[]) {
     int param_found = 0;
     char param_name[MAX_LENGTH], param_type[MAX_LENGTH];
     char data_format[MAX_LENGTH], seed[MAX_LENGTH], verbose[MAX_LENGTH];
-    unsigned long int total_lattice_sweeps;
+    unsigned long int total_lattice_sweeps, printing_step;
     int lattice_side;
     double beta, alpha, epsilon;
     fprintf(stdout, "### Parameters of the simulation:\n");
     // Type of data format of the output .dat file
-    strcpy(param_name, "output_data_format");
+    strcpy(param_name, "data_format");
     strcpy(param_type, "%s");
     param_found = read_parameter(inp_file, param_name, param_type, &data_format);
     if (param_found==1) {
         fprintf(stdout, "%s = %s\n", param_name, data_format);
-        if (strcmp(data_format, "minimal")!=0 && strcmp(data_format, "complete")!=0) {
-            fprintf(stdout, "Invalid type of format choosen for the file! Valid keywords: 'minimal' and 'complete'.\n");
+        if (strcmp(data_format, "binary")!=0 && strcmp(data_format, "text")!=0) {
+            fprintf(stdout, "Invalid type of format choosen for the file! Valid keywords: 'binary' and 'text'.\n");
             fprintf(stdout, "Simulation aborted!\n");
             fclose(inp_file);
             return EXIT_SUCCESS;
@@ -101,6 +102,18 @@ int main(int argc, char * argv[]) {
     param_found = read_parameter(inp_file, param_name, param_type, &total_lattice_sweeps);
     if (param_found==1) {
         fprintf(stdout, "%s = %lu\n", param_name, total_lattice_sweeps);
+    } else {
+        fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
+        fprintf(stdout, "Simulation aborted!\n");
+        fclose(inp_file);
+        return EXIT_SUCCESS;
+    }
+    // printing_step = number of complete sweeps after which we want to compute and collect E and |m|
+    strcpy(param_name, "printing_step");
+    strcpy(param_type, "%lu");
+    param_found = read_parameter(inp_file, param_name, param_type, &printing_step);
+    if (param_found==1) {
+        fprintf(stdout, "%s = %lu\n", param_name, printing_step);
     } else {
         fprintf(stdout, "%s has not been found in %s!\n", param_name, inp_file_name);
         fprintf(stdout, "Simulation aborted!\n");
@@ -167,10 +180,10 @@ int main(int argc, char * argv[]) {
     //////////////////////////////////////////////////////////////////
     // Trying to open the file give as output
     FILE * data;
-    if (strcmp(data_format, "complete")==0) {
+    if (strcmp(data_format, "text")==0) {
 	data = fopen(data_name, "w"); // we are choosing to write in a human readible file
     }
-    if (strcmp(data_format, "minimal")==0) {
+    if (strcmp(data_format, "binary")==0) {
         data = fopen(data_name, "wb"); // we are choosing to write in a binary
     }
     if (data == NULL) {
@@ -218,8 +231,8 @@ int main(int argc, char * argv[]) {
     double percentage_micro_acc = 0.0, percentage_metro_acc = 0.0; // Mean percentage of acceptance for micro and metro 
     char type_of_update[MAX_LENGTH];
     DoubleVector2D s_old, s_new, * magn;
-    if (strcmp(data_format, "complete")==0) {
-        fprintf(data, "# step i j k sx_old sy_old sx_new sy_new mx my Energy_per_site\n");
+    if (strcmp(data_format, "text")==0) {
+        fprintf(data, "# mx my Energy_per_site\n");
     } 
 
     while (complete_lattice_sweeps<total_lattice_sweeps) {
@@ -266,16 +279,18 @@ int main(int argc, char * argv[]) {
             }
 	    percentage_micro_acc += (double)micro_acc / (double)micro_steps;
 	    complete_lattice_sweeps += 1;
-	    E_per_site = energy_per_site(lattice, lattice_side);
-	    magn = magnetization(lattice, lattice_side);
-	    if (strcmp(data_format, "complete")==0) {
-	        fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
-	    }
-	    if (strcmp(data_format, "minimal")==0) {
-		// To write in a binary we use fwrite()
-		fwrite(&magn->sx, sizeof(double), 1, data);
-		fwrite(&magn->sy, sizeof(double), 1, data);
-		fwrite(&E_per_site, sizeof(double), 1, data);
+	    if (complete_lattice_sweeps%printing_step==0) {
+                E_per_site = energy_per_site(lattice, lattice_side);
+		magn = magnetization(lattice, lattice_side);
+		if (strcmp(data_format, "text")==0) {
+		    fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+		}
+		if (strcmp(data_format, "binary")==0) {
+		    // To write in a binary we use fwrite()
+		    fwrite(&magn->sx, sizeof(double), 1, data);
+		    fwrite(&magn->sy, sizeof(double), 1, data);
+		    fwrite(&E_per_site, sizeof(double), 1, data);
+		}
 	    }
         }
 
@@ -295,16 +310,18 @@ int main(int argc, char * argv[]) {
             }
 	    percentage_metro_acc += (double)metro_acc / (double)metro_steps;
             complete_lattice_sweeps += 1;
-	    E_per_site = energy_per_site(lattice, lattice_side);
-	    magn = magnetization(lattice, lattice_side);
-	    if (strcmp(data_format, "complete")==0) {
-	        fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
-	    }
-	    if (strcmp(data_format, "minimal")==0) {
-		// To write in a binary we use fwrite()
-		fwrite(&magn->sx, sizeof(double), 1, data);
-		fwrite(&magn->sy, sizeof(double), 1, data);
-		fwrite(&E_per_site, sizeof(double), 1, data);
+	    if (complete_lattice_sweeps%printing_step==0) {
+                E_per_site = energy_per_site(lattice, lattice_side);
+		magn = magnetization(lattice, lattice_side);
+		if (strcmp(data_format, "text")==0) {
+		    fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+		}
+		if (strcmp(data_format, "binary")==0) {
+		    // To write in a binary we use fwrite()
+		    fwrite(&magn->sx, sizeof(double), 1, data);
+		    fwrite(&magn->sy, sizeof(double), 1, data);
+		    fwrite(&E_per_site, sizeof(double), 1, data);
+		}
 	    }
 	}
     }
