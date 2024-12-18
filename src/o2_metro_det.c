@@ -17,7 +17,7 @@ int main(int argc, char * argv[]) {
     // Check if the number of parameters is 3, i.e. ./program inputfile.in data.dat
     if (argc!=3) {
         fprintf(stdout, "Invalid input!\nHow to use this program:\n./program input.inp datafile(.dat or .bin)\n");
-	fprintf(stdout, "Input.inp must be like (do not include ' '):\nlattice_side int\nseed int or 'time'\ntotal_lattice_sweeps int\nprinting_step int\ndata_format 'binary' or 'text'\nbeta double\nalpha double\nepsilon double\nverbose 'false' or 'true'");
+	fprintf(stdout, "Input.inp must be like (do not include ' '):\nlattice_side int\nseed int or 'time'\ntotal_lattice_sweeps int\nprinting_step int\ndata_format 'binary' or 'text'\nbeta double\nalpha double\nepsilon double\nverbose 'false' or 'true'\n");
         return EXIT_SUCCESS;
     }
 
@@ -229,7 +229,6 @@ int main(int argc, char * argv[]) {
     Vol = lattice_side * lattice_side * lattice_side;
     double random_n, E_per_site;
     double percentage_micro_acc = 0.0, percentage_metro_acc = 0.0; // Mean percentage of acceptance for micro and metro 
-    char type_of_update[MAX_LENGTH];
     DoubleVector2D s_old, s_new, * magn;
     if (strcmp(data_format, "text")==0) {
         fprintf(data, "# mx my Energy_per_site\n");
@@ -243,13 +242,11 @@ int main(int argc, char * argv[]) {
 	    if (strcmp(verbose, "true")==0) {
 	        fprintf(stdout, "Next L^3 steps will be Metropolis!\n");
 	    }
-	    strcpy(type_of_update, "metropolis");
 	} else {
 	    metro=0; // microcanonical steps
 	    if (strcmp(verbose, "true")==0) {
 	        fprintf(stdout, "Next L^3 steps will be microcanonical!\n");
 	    }
-	    strcpy(type_of_update, "microcanonical");
 	}
 	// normalization of all the sites after a complete update of the lattice
 	for (l=0; l<lattice_side; l++) {
@@ -283,7 +280,7 @@ int main(int argc, char * argv[]) {
                 E_per_site = energy_per_site(lattice, lattice_side);
 		magn = magnetization(lattice, lattice_side);
 		if (strcmp(data_format, "text")==0) {
-		    fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+		    fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
 		}
 		if (strcmp(data_format, "binary")==0) {
 		    // To write in a binary we use fwrite()
@@ -314,7 +311,7 @@ int main(int argc, char * argv[]) {
                 E_per_site = energy_per_site(lattice, lattice_side);
 		magn = magnetization(lattice, lattice_side);
 		if (strcmp(data_format, "text")==0) {
-		    fprintf(data, "%.15lf %.15lf %.15lf %s\n", magn->sx, magn->sy, E_per_site, type_of_update);
+		    fprintf(data, "%.15lf %.15lf %.15lf\n", magn->sx, magn->sy, E_per_site);
 		}
 		if (strcmp(data_format, "binary")==0) {
 		    // To write in a binary we use fwrite()
