@@ -123,8 +123,8 @@ DoubleVector2D* magnetization(DoubleVector2D ***lattice, int lattice_side) {
         }
     }
 
-    m->sx /= Vol;
-    m->sy /= Vol;
+    m->sx /= (double) Vol;
+    m->sy /= (double) Vol;
 
     return m;
 }
