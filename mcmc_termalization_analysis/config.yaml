@@ -1,0 +1,10 @@
+paths:
+  data_dir: "../data/mcmc_termalization_data"
+  plot_dir: "../plots/mcmc_termalization_plots"
+  log_dir: "../logs/mcmc_termalization_logs/"
+  docs_dir: "../docs/mcmc_termalization_docs/"
+  tests_dir: "../tests"
+
+settings:
+  max_lag_default: 1000
+  file_extension: ".bin"
