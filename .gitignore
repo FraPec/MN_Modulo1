@@ -66,5 +66,4 @@ Makefile
 
 # folders
 __pycache__/
-simulation*/
-data/
+data*/
