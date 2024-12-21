@@ -1,9 +1,4 @@
 import numpy as np
-from joblib import Parallel, delayed
-
-def center_data(data):
-    """Center data by subtracting the mean."""
-    return data - np.mean(data, axis=0)
 
 
 
@@ -64,6 +59,6 @@ def compute_autocorrelations(data, max_lag):
     return np.array(autocorr_matrices)
     
     
-    
+
     
     
