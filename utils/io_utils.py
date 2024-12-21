@@ -1,8 +1,11 @@
 import os
+import sys
 import yaml
 import logging
 import csv
 import numpy as np
+import pandas as pd
+
 
 
 def setup_logging(log_dir="logs", log_file="mcmc_autocorr.log"):
@@ -36,6 +39,8 @@ def setup_logging(log_dir="logs", log_file="mcmc_autocorr.log"):
 
     logging.info("Logging system initialized.")  # Example log entry
 
+
+
 def ensure_directory(directory):
     """
     Ensures that a directory exists. If not, it is created.
@@ -51,6 +56,9 @@ def ensure_directory(directory):
         logging.info(f"Created directory: {directory}")
     else:
         logging.info(f"Directory already exists: {directory}")
+
+
+
 
 def load_config(config_path="config.yaml"):
     """
@@ -69,6 +77,9 @@ def load_config(config_path="config.yaml"):
     logging.info("Configuration loaded successfully.")
     return config
 
+
+
+
 def load_binary_file(filepath, n_cols):
     """
     Loads binary files and reshapes them into a NumPy array.
@@ -84,6 +95,7 @@ def load_binary_file(filepath, n_cols):
     if data.size % n_cols != 0:
         raise ValueError("The binary file cannot be reshaped into the specified columns.")
     return data.reshape(-1, n_cols)
+
 
 
 
@@ -109,25 +121,77 @@ def save_autocorr_to_csv(filepath, data, headers):
 
 
 
-def get_unique_filename(directory, base_name, extension):
+prompt_cache = {}  # Cache for user's decisions
+
+def get_user_choice_for_existing_file(file_path):
     """
-    Ensures unique filenames to prevent overwriting.
+    Prompt the user to decide what to do when a file already exists.
+
+    Parameters:
+        file_path (str): Path to the existing file.
+
+    Returns:
+        str: Action chosen by the user ('overwrite', 'new_name', 'exit', 'plot_only').
+    """
+    # Check if the user has already decided for this file type
+    if file_path in prompt_cache:
+        return prompt_cache[file_path]
+
+    while True:
+        print(f"\n[WARNING] File '{file_path}' already exists.")
+        print("Options:")
+        print("  1. Overwrite the file")
+        print("  2. Save with a new name")
+        print("  3. Exit script")
+        print("  4. Proceed directly to plotting using this file")
+        choice = input("Enter your choice (1/2/3/4): ").strip()
+        if choice == "1":
+            prompt_cache[file_path] = "overwrite"
+            return "overwrite"
+        elif choice == "2":
+            prompt_cache[file_path] = "new_name"
+            return "new_name"
+        elif choice == "3":
+            prompt_cache[file_path] = "exit"
+            return "exit"
+        elif choice == "4":
+            prompt_cache[file_path] = "plot_only"
+            return "plot_only"
+        else:
+            print("[ERROR] Invalid input. Please enter 1, 2, 3, or 4.")
+
+def get_unique_filename(directory, base_name, extension, max_lag=None):
+    """
+    Ensures unique filenames to prevent overwriting. Provides options to overwrite or rename.
 
     Parameters:
         directory (str): Directory where the file will be saved.
         base_name (str): Base name for the file.
         extension (str): File extension.
+        max_lag (int, optional): Maximum lag value to include in the filename.
 
     Returns:
-        str: Unique file path.
+        str: Final file path chosen by the user.
     """
+    # Include max_lag in the base name if provided
+    if max_lag is not None:
+        base_name = f"{base_name}_lag{max_lag}"
+
     file_path = os.path.join(directory, f"{base_name}{extension}")
-    counter = 1
-    while os.path.exists(file_path):
-        file_path = os.path.join(directory, f"{base_name}_v{counter}{extension}")
-        counter += 1
-    return file_path
-    
+    if os.path.exists(file_path):
+        action = get_user_choice_for_existing_file(file_path)
+        if action == "overwrite":
+            return file_path
+        elif action == "new_name":
+            counter = 1
+            while os.path.exists(file_path):
+                file_path = os.path.join(directory, f"{base_name}_v{counter}{extension}")
+                counter += 1
+            print(f"[INFO] New file name: {file_path}")
+        elif action == "exit":
+            print("[INFO] Exiting script as per user request.")
+            sys.exit(0)
+    return file_path    
     
     
 def prompt_user_choice(message):
@@ -145,5 +209,70 @@ def prompt_user_choice(message):
         if choice in ["y", "n"]:
             return choice == "y"
         print("Invalid input. Please enter 'y' or 'n'.")    
+        
+        
+        
+        
+        
+
+def load_autocorr_from_csv(csv_path):
+    """
+    Load autocorrelations from an existing CSV file.
+
+    Parameters:
+        csv_path (str): Path to the CSV file.
+
+    Returns:
+        dict: Dictionary containing loaded autocorrelations.
+    """
+    df = pd.read_csv(csv_path)
+    return {
+        "mx-mx": df["mx-mx"].to_numpy(),
+        "mx-my": df["mx-my"].to_numpy(),
+        "my-mx": df["my-mx"].to_numpy(),
+        "my-my": df["my-my"].to_numpy(),
+        "module_m": df["module_m"].to_numpy(),
+        "epsilon": df["epsilon"].to_numpy()
+    }
+
+
+def save_autocorrelations_to_csv(file_path, autocorr_dict):
+    """
+    Save autocorrelation results to a CSV file.
+
+    Parameters:
+        file_path (str): Path to save the CSV file.
+        autocorr_dict (dict): Dictionary of autocorrelation arrays.
+
+    Returns:
+        None
+    """
+    # Convert dictionary to a DataFrame
+    df = pd.DataFrame({
+        "mx-mx": autocorr_dict["mx-mx"],
+        "mx-my": autocorr_dict["mx-my"],
+        "my-mx": autocorr_dict["my-mx"],
+        "my-my": autocorr_dict["my-my"],
+        "module_m": autocorr_dict["module_m"],
+        "epsilon": autocorr_dict["epsilon"]
+    })
     
+    # Save to CSV
+    df.to_csv(file_path, index=False)
+    print(f"[INFO] Autocorrelation results saved to: {file_path}")
+    
+    
+
+
+def check_existing_autocorr_file(file_path):
+    """
+    Check if an autocorrelation file already exists.
+
+    Parameters:
+        file_path (str): Path to the autocorrelation file.
+
+    Returns:
+        bool: True if file exists, False otherwise.
+    """
+    return os.path.isfile(file_path)
     
