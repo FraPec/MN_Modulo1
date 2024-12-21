@@ -1,4 +1,6 @@
 import os
+from io_utils import load_config
+
 
 
 def navigate_directories(start_path=".", multi_select=False, file_extension=".bin"):
@@ -89,7 +91,153 @@ def navigate_directories(start_path=".", multi_select=False, file_extension=".bi
     return selected_paths
 
 
+def get_user_inputs_for_mcmc_termalization_analysys(config_path="mcmc_termalization_config.yaml"):
+    """
+    Interactive interface to ask the user for inputs and preferences.
 
+    Parameters:
+        config_path (str): Path to the configuration file.
+
+    Returns:
+        dict: A dictionary containing all user inputs and preferences.
+    """
+    # Load default values from config
+    config = load_config(config_path)
+    defaults = config["settings"]
+    paths = config["paths"]
+    default_files = paths.get("default_files", [])
+
+    print("\n===== MCMC Autocorrelation Analysis =====\n")
+
+    input_paths = []
+
+    # Option to choose from default files
+    if default_files:
+        print("Default Files:")
+        for idx, file_path in enumerate(default_files, start=1):
+            print(f"  {idx}. {file_path}")
+        print("  0. None of these (manual entry or navigate)")
+
+        while True:
+            default_choice = input("\nSelect file(s) from the list (e.g., '1 2 3' or 'all', or 0 to skip): ").strip()
+            if default_choice == "0":
+                input_paths = []
+                break
+            elif default_choice.lower() == "all":
+                input_paths = default_files
+                print(f"[INFO] Selected all default files.")
+                break
+            else:
+                try:
+                    selected_indices = list(map(int, default_choice.split()))
+                    if all(1 <= idx <= len(default_files) for idx in selected_indices):
+                        input_paths = [default_files[idx - 1] for idx in selected_indices]
+                        print(f"[INFO] Selected files: {input_paths}")
+                        break
+                except ValueError:
+                    pass
+                print("[ERROR] Invalid choice. Please try again.")
+
+    # Option to manually enter a path
+    if not input_paths:
+        manual_path = input("\nEnter a file or folder path (leave empty to navigate): ").strip()
+        if manual_path:
+            if os.path.exists(manual_path):
+                if os.path.isdir(manual_path):
+                    # Collect all .bin and .dat files in the directory and subdirectories
+                    input_paths = [
+                        os.path.join(root, f)
+                        for root, _, files in os.walk(manual_path)
+                        for f in files if f.endswith(('.bin', '.dat'))
+                    ]
+                    print(f"[INFO] Selected all valid files in the directory and subdirectories: {input_paths}")
+                elif os.path.isfile(manual_path):
+                    input_paths = [manual_path]
+            else:
+                print("[ERROR] Path does not exist. Please try again.")
+                return get_user_inputs(config_path)
+
+    # Navigate directories if no path is specified
+    if not input_paths:
+        print("\nNavigate to select the input file(s) or folder(s).")
+        input_paths = navigate_directories(start_path=".", multi_select=True, file_extension=".bin")
+        if not input_paths:
+            print("[INFO] No files selected. Exiting...")
+            exit(0)
+
+    # Ask for max_lag
+    max_lag_default = defaults["max_lag_default"]
+    while True:
+        max_lag_input = input(
+            f"Enter the maximum lag for autocorrelations (Default: {max_lag_default}): "
+        ).strip()
+        if not max_lag_input:
+            max_lag = max_lag_default  # Use default if input is empty
+            break
+        try:
+            max_lag = int(max_lag_input)
+            break
+        except ValueError:
+            print("[ERROR] Invalid input. Please enter a number.")
+
+    # Use x_scale and y_scale from configuration
+    x_scale = defaults["x_scale"]
+    y_scale = defaults["y_scale"]
+
+    # Ask for output preferences
+    print("\nOutput Directories:")
+    print(f"  Data directory: {paths['data_dir']}")
+    print(f"  Plot directory: {paths['plot_dir']}")
+
+    confirm_dirs = input(
+        "Do you want to use the default output directories? (y/n): "
+    ).strip().lower()
+    if confirm_dirs == "n":
+        data_dir = input("Enter the path for saving data files: ").strip()
+        plot_dir = input("Enter the path for saving plots: ").strip()
+    else:
+        data_dir = paths["data_dir"]
+        plot_dir = paths["plot_dir"]
+
+    ensure_directory(data_dir)
+    ensure_directory(plot_dir)
+
+    # Ask for plot preferences
+    while True:
+        plot_choice = input(
+            "Do you want separate plots for 'module_m' and 'epsilon' autocorrelations? (y/n): "
+        ).strip().lower()
+        if plot_choice in ["y", "n"]:
+            separate_plots = plot_choice == "y"
+            break
+        print("[ERROR] Please answer with 'y' or 'n'.")
+
+    # Confirm inputs
+    print("\n===== Summary of Inputs =====")
+    print(f"Input Paths: {input_paths}")
+    print(f"Max Lag: {max_lag}")
+    print(f"Data Directory: {data_dir}")
+    print(f"Plot Directory: {plot_dir}")
+    print(f"Separate Plots: {'Yes' if separate_plots else 'No'}")
+    print(f"x_scale: {x_scale}")
+    print(f"y_scale: {y_scale}")
+
+    confirm = input("\nIs everything correct? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Restarting input collection...\n")
+        return get_user_inputs(config_path)
+
+    logging.info("All inputs successfully collected.")
+    return {
+        "input_paths": input_paths,
+        "max_lag": max_lag,
+        "data_dir": data_dir,
+        "plot_dir": plot_dir,
+        "separate_plots": separate_plots,
+        "x_scale": x_scale,
+        "y_scale": y_scale,
+    }
+    
 
 
 
