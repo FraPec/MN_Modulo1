@@ -62,4 +62,47 @@ def plot_autocorrelations(data_list, labels, max_lag, save_path, style="line", x
     plt.legend()
     plt.grid()
     plt.savefig(save_path, dpi=300)
-    plt.close()
+    plt.close
+    
+    
+    
+    
+
+def generate_plots(autocorr_data, plot_dir, base_name, separate_plots):
+    """
+    Generate plots using the provided autocorrelation data.
+
+    Parameters:
+        autocorr_data (dict): Dictionary of autocorrelation arrays.
+        plot_dir (str): Directory to save plots.
+        base_name (str): Base name for output files.
+        separate_plots (bool): Whether to generate separate plots.
+    """
+    # Generate matrix component plots
+    plot_file_matrix = os.path.join(plot_dir, f"{base_name}_autocorr_matrix.png")
+    plot_autocorrelations(
+        [autocorr_data["mx-mx"], autocorr_data["mx-my"], autocorr_data["my-mx"], autocorr_data["my-my"]],
+        ["mx-mx", "mx-my", "my-mx", "my-my"],
+        max_lag=len(autocorr_data["mx-mx"]) - 1,
+        save_path=plot_file_matrix
+    )
+
+    # Generate module_m and epsilon plots
+    if separate_plots:
+        plot_file_module = os.path.join(plot_dir, f"{base_name}_autocorr_module_m.png")
+        plot_autocorrelations([autocorr_data["module_m"]], ["module_m"], max_lag=len(autocorr_data["module_m"]) - 1,
+                              save_path=plot_file_module)
+
+        plot_file_epsilon = os.path.join(plot_dir, f"{base_name}_autocorr_epsilon.png")
+        plot_autocorrelations([autocorr_data["epsilon"]], ["epsilon"], max_lag=len(autocorr_data["epsilon"]) - 1,
+                              save_path=plot_file_epsilon)
+    else:
+        plot_file_combined = os.path.join(plot_dir, f"{base_name}_autocorr_combined.png")
+        plot_autocorrelations(
+            [autocorr_data["module_m"], autocorr_data["epsilon"]],
+            ["module_m", "epsilon"],
+            max_lag=len(autocorr_data["module_m"]) - 1,
+            save_path=plot_file_combined
+        )  
+    
+    
