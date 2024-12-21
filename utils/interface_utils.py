@@ -1,57 +1,247 @@
 import os
 
-def navigate_directories(starting_path="."):
+
+
+def navigate_directories(start_path=".", multi_select=False, file_extension=".bin"):
     """
-    Allow the user to navigate directories to select a file.
+    Allows users to navigate directories and select files or folders.
 
     Parameters:
-        starting_path (str): The initial path to start the navigation.
+        start_path (str): The starting directory for navigation.
+        multi_select (bool): If True, allows selection of multiple files or folders.
+        file_extension (str): File extension to filter files (e.g., '.bin').
 
     Returns:
-        str: The selected file path.
+        list[str]: List of selected file or folder paths.
     """
-    current_path = os.path.abspath(starting_path)
+    current_dir = os.path.abspath(start_path)
+    selected_paths = []
 
     while True:
-        print(f"\nCurrent Directory: {current_path}")
-        entries = os.listdir(current_path)
+        # Filter and sort contents (exclude hidden files/directories)
+        contents = [item for item in sorted(os.listdir(current_dir)) if not item.startswith('.')]
+        directories = [item for item in contents if os.path.isdir(os.path.join(current_dir, item))]
+        files = [item for item in contents if os.path.isfile(os.path.join(current_dir, item)) and item.endswith(file_extension)]
 
-        # Separate directories and files
-        directories = [d for d in entries if os.path.isdir(os.path.join(current_path, d))]
-        files = [f for f in entries if os.path.isfile(os.path.join(current_path, f))]
+        # Display current directory and contents
+        print(f"\nCurrent directory: {current_dir}")
+        print("Directories:")
+        for idx, directory in enumerate(directories, 1):
+            print(f"  D{idx}. {directory}")
+        print("Files:")
+        for idx, file in enumerate(files, len(directories) + 1):
+            print(f"  F{idx}. {file}")
 
-        print("\nDirectories:")
-        for idx, directory in enumerate(directories, start=1):
-            print(f"  {idx}. {directory}")
+        # Display actions
+        print("\nActions: '..' (up), '.' (list), 'done' (finish selection), 'exit' (quit), 'all' (select all)")
 
-        print("\nFiles:")
-        for idx, file in enumerate(files, start=len(directories) + 1):
-            print(f"  {idx}. {file}")
+        user_input = input("Enter your choice (number, '..', '.', 'done', 'exit', 'all'): ").strip()
 
-        print("\nOptions:")
-        print("  0. Select this directory")
-        print("  b. Go back to the parent directory")
-        print("  q. Quit")
-
-        choice = input("\nEnter your choice (number/b/q): ").strip().lower()
-
-        if choice == "q":
-            print("[INFO] Exiting navigation...")
-            return None
-        elif choice == "b":
-            current_path = os.path.dirname(current_path)
-        elif choice == "0":
-            print("[INFO] Selected directory.")
-            return current_path
-        elif choice.isdigit() and 1 <= int(choice) <= len(directories) + len(files):
-            index = int(choice) - 1
-            if index < len(directories):
-                # Navigate into the selected directory
-                current_path = os.path.join(current_path, directories[index])
+        if user_input == "exit":
+            print("[INFO] Exiting navigation.")
+            exit(0)
+        elif user_input == "done":
+            if selected_paths:
+                break
+            print("[INFO] No selections made. Returning to navigation.")
+        elif user_input == "..":
+            # Move up one directory
+            current_dir = os.path.dirname(current_dir)
+        elif user_input == ".":
+            # Refresh listing
+            continue
+        elif user_input == "all":
+            # Select all visible items
+            for item in contents:
+                item_path = os.path.join(current_dir, item)
+                if os.path.isdir(item_path):
+                    # Recursively collect files from directory
+                    for root, _, files_in_dir in os.walk(item_path):
+                        selected_paths.extend([os.path.join(root, f) for f in files_in_dir if f.endswith(file_extension)])
+                elif os.path.isfile(item_path) and item_path.endswith(file_extension):
+                    selected_paths.append(item_path)
+            print(f"[INFO] Selected all items: {selected_paths}")
+            break
+        elif user_input.startswith("D") and user_input[1:].isdigit():
+            # Handle directory selection
+            choice_idx = int(user_input[1:]) - 1
+            if 0 <= choice_idx < len(directories):
+                current_dir = os.path.join(current_dir, directories[choice_idx])
             else:
-                # Return the selected file
-                selected_file = os.path.join(current_path, files[index - len(directories)])
-                print(f"[INFO] Selected file: {selected_file}")
-                return selected_file
+                print("[ERROR] Invalid directory index.")
+        elif user_input.startswith("F") and user_input[1:].isdigit():
+            # Handle file selection
+            choice_idx = int(user_input[1:]) - 1 - len(directories)
+            if 0 <= choice_idx < len(files):
+                selected_path = os.path.join(current_dir, files[choice_idx])
+                if multi_select:
+                    if selected_path not in selected_paths:
+                        selected_paths.append(selected_path)
+                        print(f"[INFO] Added to selection: {selected_path}")
+                    else:
+                        print("[INFO] File already selected.")
+                else:
+                    return [selected_path]
+            else:
+                print("[ERROR] Invalid file index.")
         else:
-            print("[ERROR] Invalid choice. Please try again.")
+            print("[ERROR] Invalid command.")
+
+    return selected_paths
+
+
+
+
+
+
+def navigate_directories_old(start_path=".", multi_select=False):
+    """
+    Allows users to navigate directories and select files or folders.
+
+    Parameters:
+        start_path (str): The starting directory for navigation.
+        multi_select (bool): If True, allows selection of multiple files or folders.
+
+    Returns:
+        list[str]: List of selected file or folder paths.
+    """
+    current_dir = os.path.abspath(start_path)
+    selected_paths = []
+
+    while True:
+        # Filter and sort contents (exclude hidden files/directories)
+        contents = [item for item in sorted(os.listdir(current_dir)) if not item.startswith('.')]
+        directories = [item for item in contents if os.path.isdir(os.path.join(current_dir, item))]
+        files = [item for item in contents if os.path.isfile(os.path.join(current_dir, item))]
+
+        # Display current directory and contents
+        print(f"\nCurrent directory: {current_dir}")
+        print("Directories:")
+        for idx, directory in enumerate(directories, 1):
+            print(f"  D{idx}. {directory}")
+        print("Files:")
+        for idx, file in enumerate(files, len(directories) + 1):
+            print(f"  F{idx}. {file}")
+
+        # Display actions
+        print("\nActions: '..' (up), '.' (list), 'done' (finish selection), 'exit' (quit), 'all' (select all)")
+
+        user_input = input("Enter your choice (number, '..', '.', 'done', 'exit', 'all'): ").strip()
+
+        if user_input == "exit":
+            print("[INFO] Exiting navigation.")
+            exit(0)
+        elif user_input == "done":
+            if selected_paths:
+                break
+            print("[INFO] No selections made. Returning to navigation.")
+        elif user_input == "..":
+            # Move up one directory
+            current_dir = os.path.dirname(current_dir)
+        elif user_input == ".":
+            # Refresh listing
+            continue
+        elif user_input == "all":
+            # Select all visible items
+            selected_paths.extend([os.path.join(current_dir, item) for item in contents])
+            print(f"[INFO] Selected all items: {selected_paths}")
+            break
+        elif user_input.startswith("D") and user_input[1:].isdigit():
+            # Handle directory selection
+            choice_idx = int(user_input[1:]) - 1
+            if 0 <= choice_idx < len(directories):
+                current_dir = os.path.join(current_dir, directories[choice_idx])
+            else:
+                print("[ERROR] Invalid directory index.")
+        elif user_input.startswith("F") and user_input[1:].isdigit():
+            # Handle file selection
+            choice_idx = int(user_input[1:]) - 1 - len(directories)
+            if 0 <= choice_idx < len(files):
+                selected_path = os.path.join(current_dir, files[choice_idx])
+                if multi_select:
+                    if selected_path not in selected_paths:
+                        selected_paths.append(selected_path)
+                        print(f"[INFO] Added to selection: {selected_path}")
+                    else:
+                        print("[INFO] File already selected.")
+                else:
+                    return [selected_path]
+            else:
+                print("[ERROR] Invalid file index.")
+        else:
+            print("[ERROR] Invalid command.")
+
+    return selected_paths
+
+
+def navigate_directories_old(start_path=".", multi_select=False):
+    """
+    Allows users to navigate directories and select files or folders.
+
+    Parameters:
+        start_path (str): The starting directory for navigation.
+        multi_select (bool): If True, allows selection of multiple files or folders.
+
+    Returns:
+        list[str]: List of selected file or folder paths.
+    """
+    current_dir = os.path.abspath(start_path)
+    selected_paths = []
+
+    while True:
+        print(f"\nCurrent directory: {current_dir}")
+        contents = sorted(os.listdir(current_dir))
+
+        # Show directory contents
+        print("Contents:")
+        for idx, item in enumerate(contents, 1):
+            print(f"  {idx}. {item}")
+        print("\nActions: '..' (up), '.' (list), 'done' (finish selection), 'exit' (quit), 'all' (select all)")
+
+        user_input = input("Enter your choice (number, '..', '.', 'done', 'exit', 'all'): ").strip()
+
+        if user_input == "exit":
+            print("[INFO] Exiting navigation.")
+            exit(0)
+        elif user_input == "done":
+            if selected_paths:
+                break
+            print("[INFO] No selections made. Returning to navigation.")
+        elif user_input == "..":
+            # Move up one directory
+            current_dir = os.path.dirname(current_dir)
+        elif user_input == ".":
+            # Refresh listing
+            continue
+        elif user_input == "all":
+            # Select all contents in the current directory
+            selected_paths = [os.path.join(current_dir, item) for item in contents]
+            print(f"[INFO] Selected all items: {selected_paths}")
+            break
+        elif user_input.isdigit():
+            choice_idx = int(user_input) - 1
+            if 0 <= choice_idx < len(contents):
+                selected_item = contents[choice_idx]
+                selected_path = os.path.join(current_dir, selected_item)
+
+                if os.path.isdir(selected_path):
+                    # Enter directory
+                    current_dir = selected_path
+                elif os.path.isfile(selected_path):
+                    # Add file to selection
+                    if multi_select:
+                        if selected_path not in selected_paths:
+                            selected_paths.append(selected_path)
+                            print(f"[INFO] Added to selection: {selected_path}")
+                        else:
+                            print("[INFO] File already selected.")
+                    else:
+                        return [selected_path]
+                else:
+                    print("[ERROR] Invalid selection.")
+            else:
+                print("[ERROR] Invalid index.")
+        else:
+            print("[ERROR] Invalid command.")
+
+    return selected_paths

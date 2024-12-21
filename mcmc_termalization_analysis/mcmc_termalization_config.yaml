@@ -4,10 +4,17 @@ paths:
   log_dir: "../logs/mcmc_termalization_logs/"
   docs_dir: "../docs/mcmc_termalization_docs/"
   tests_dir: "../tests"
+  default_files:
+    - "../data/simulation_data/simulations_5_25/data/lattice25/data_b0.500_a1.0_L25.bin"
+    - "../data/simulation_data/simulations_5_25/data/lattice25/data_b0.455_a1.0_L25.bin"
+    - "../data/simulation_data/simulations_5_25/data/lattice20/data_b0.500_a1.0_L20.bin"
+    - "../data/simulation_data/simulations_5_25/data/lattice20/data_b0.455_a1.0_L20.bin"
+    - "../data/simulation_data/simulations_5_25/data/lattice5/data_b0.500_a1.0_L5.bin"
+    - "../data/simulation_data/simulations_5_25/data/lattice5/data_b0.455_a1.0_L5.bin"
 
 settings:
   max_lag_default: 1000
   file_extension: ".bin"
-  x_scale: "log"  # Options: linear, log
-  y_scale: "linear"     # Options: linear, log
+  x_scale: "linear"  # Options: linear, log
+  y_scale: "log"     # Options: linear, log
   plot_title_format: "Lattice Side: {lattice_side}, Beta: {beta}"  # Plot title format

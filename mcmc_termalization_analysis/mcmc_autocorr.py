@@ -18,7 +18,6 @@ from plot_utils import plot_autocorrelations
 from interface_utils import navigate_directories
 
 
-
 def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
     """
     Interactive interface to ask the user for inputs and preferences.
@@ -33,16 +32,65 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
     config = load_config(config_path)
     defaults = config["settings"]
     paths = config["paths"]
+    default_files = paths.get("default_files", [])
 
     print("\n===== MCMC Autocorrelation Analysis =====\n")
 
-    # Navigate directories to select the input file
-    print("Navigate to select the input file or folder.")
-    input_path = navigate_directories()
-    if not input_path:
-        print("[INFO] No file selected. Exiting...")
-        exit(0)
+    input_paths = []
 
+    # Option to choose from default files
+    if default_files:
+        print("Default Files:")
+        for idx, file_path in enumerate(default_files, start=1):
+            print(f"  {idx}. {file_path}")
+        print("  0. None of these (manual entry or navigate)")
+
+        while True:
+            default_choice = input("\nSelect file(s) from the list (e.g., '1 2 3' or 'all', or 0 to skip): ").strip()
+            if default_choice == "0":
+                input_paths = []
+                break
+            elif default_choice.lower() == "all":
+                input_paths = default_files
+                print(f"[INFO] Selected all default files.")
+                break
+            else:
+                try:
+                    selected_indices = list(map(int, default_choice.split()))
+                    if all(1 <= idx <= len(default_files) for idx in selected_indices):
+                        input_paths = [default_files[idx - 1] for idx in selected_indices]
+                        print(f"[INFO] Selected files: {input_paths}")
+                        break
+                except ValueError:
+                    pass
+                print("[ERROR] Invalid choice. Please try again.")
+
+    # Option to manually enter a path
+    if not input_paths:
+        manual_path = input("\nEnter a file or folder path (leave empty to navigate): ").strip()
+        if manual_path:
+            if os.path.exists(manual_path):
+                if os.path.isdir(manual_path):
+                    # Collect all .bin and .dat files in the directory and subdirectories
+                    input_paths = [
+                        os.path.join(root, f)
+                        for root, _, files in os.walk(manual_path)
+                        for f in files if f.endswith(('.bin', '.dat'))
+                    ]
+                    print(f"[INFO] Selected all valid files in the directory and subdirectories: {input_paths}")
+                elif os.path.isfile(manual_path):
+                    input_paths = [manual_path]
+            else:
+                print("[ERROR] Path does not exist. Please try again.")
+                return get_user_inputs(config_path)
+
+    # Navigate directories if no path is specified
+    if not input_paths:
+        print("\nNavigate to select the input file(s) or folder(s).")
+        input_paths = navigate_directories(start_path=".", multi_select=True, file_extension=".bin")
+        if not input_paths:
+            print("[INFO] No files selected. Exiting...")
+            exit(0)
 
     # Ask for max_lag
     max_lag_default = defaults["max_lag_default"]
@@ -58,7 +106,7 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
             break
         except ValueError:
             print("[ERROR] Invalid input. Please enter a number.")
-            
+
     # Use x_scale and y_scale from configuration
     x_scale = defaults["x_scale"]
     y_scale = defaults["y_scale"]
@@ -93,7 +141,7 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
 
     # Confirm inputs
     print("\n===== Summary of Inputs =====")
-    print(f"Input Path: {input_path}")
+    print(f"Input Paths: {input_paths}")
     print(f"Max Lag: {max_lag}")
     print(f"Data Directory: {data_dir}")
     print(f"Plot Directory: {plot_dir}")
@@ -108,7 +156,7 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
 
     logging.info("All inputs successfully collected.")
     return {
-        "input_path": input_path,
+        "input_paths": input_paths,
         "max_lag": max_lag,
         "data_dir": data_dir,
         "plot_dir": plot_dir,
@@ -116,8 +164,6 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
         "x_scale": x_scale,
         "y_scale": y_scale,
     }
-    
-    
     
     
     
@@ -134,27 +180,23 @@ if __name__ == "__main__":
 
     # Collect user inputs
     user_inputs = get_user_inputs(config_path="mcmc_termalization_config.yaml")
-    input_path = user_inputs["input_path"]
+    input_paths = user_inputs["input_paths"]
     max_lag = user_inputs["max_lag"]
     data_dir = user_inputs["data_dir"]
     plot_dir = user_inputs["plot_dir"]
     separate_plots = user_inputs["separate_plots"]
-    # Load x_scale and y_scale from configuration
     x_scale = user_inputs["x_scale"]
     y_scale = user_inputs["y_scale"]
 
     ensure_directory(data_dir)
     ensure_directory(plot_dir)
 
-    # Process single file or directory
-    files = [input_path] if os.path.isfile(input_path) else [
-        os.path.join(input_path, f) for f in os.listdir(input_path) if f.endswith(('.bin', '.dat'))
-    ]
 
     # Load configuration at the start of the script
     config = load_config(config_path="mcmc_termalization_config.yaml")
+    logging.info("Configuration loaded successfully.")
 
-    for file in files:
+    for file in input_paths:
         logging.info(f"Processing file: {file}")
         base_name = os.path.splitext(os.path.basename(file))[0]
 
