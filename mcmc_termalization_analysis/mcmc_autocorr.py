@@ -179,7 +179,7 @@ if __name__ == "__main__":
     logging.info("Starting MCMC Autocorrelation Analysis...")
 
     # Collect user inputs
-    user_inputs = get_user_inputs(config_path="mcmc_termalization_config.yaml")
+    user_inputs = get_user_inputs(config_path="../configs/mcmc_termalization_config.yaml")
     input_paths = user_inputs["input_paths"]
     max_lag = user_inputs["max_lag"]
     data_dir = user_inputs["data_dir"]
@@ -193,7 +193,7 @@ if __name__ == "__main__":
 
 
     # Load configuration at the start of the script
-    config = load_config(config_path="mcmc_termalization_config.yaml")
+    config = load_config(config_path="../configs/mcmc_termalization_config.yaml")
     logging.info("Configuration loaded successfully.")
 
     for file in input_paths:
