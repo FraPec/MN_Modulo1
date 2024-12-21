@@ -5,6 +5,7 @@ import logging
 import csv
 import numpy as np
 import pandas as pd
+import re
 
 
 
@@ -275,4 +276,47 @@ def check_existing_autocorr_file(file_path):
         bool: True if file exists, False otherwise.
     """
     return os.path.isfile(file_path)
+    
+    
+    
+
+
+def extract_lattice_side(file_path):
+    """
+    Extract the lattice side from the file name based on a naming convention.
+    Example: "data_b0.456_a1.0_L15.bin" -> lattice_side = 15
+
+    Parameters:
+        file_path (str): Path to the file.
+
+    Returns:
+        int: Lattice side extracted from the file name, or None if not found.
+    """
+    # Regex pattern to match '_L<number>'
+    match = re.search(r"_L(\d+)", file_path)
+    if match:
+        return int(match.group(1))
+    else:
+        logging.warning(f"Lattice side not found in file name: {file_path}")
+        return None
+
+
+def extract_beta(file_path):
+    """
+    Extract the beta value from the file name based on a naming convention.
+    Example: "data_b0.456_a1.0_L15.bin" -> beta = 0.456
+
+    Parameters:
+        file_path (str): Path to the file.
+
+    Returns:
+        float: Beta value extracted from the file name, or None if not found.
+    """
+    # Regex pattern to match 'b<number>'
+    match = re.search(r"_b([\d\.]+)", file_path)
+    if match:
+        return float(match.group(1))
+    else:
+        logging.warning(f"Beta value not found in file name: {file_path}")
+        return None
     

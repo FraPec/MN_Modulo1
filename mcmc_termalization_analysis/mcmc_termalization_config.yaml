@@ -8,3 +8,6 @@ paths:
 settings:
   max_lag_default: 1000
   file_extension: ".bin"
+  x_scale: "log"  # Options: linear, log
+  y_scale: "linear"     # Options: linear, log
+  plot_title_format: "Lattice Side: {lattice_side}, Beta: {beta}"  # Plot title format

@@ -9,11 +9,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../u
 # Import utility functions
 from io_utils import (
     setup_logging, load_binary_file, save_autocorrelations_to_csv, ensure_directory,
-    get_unique_filename, check_existing_autocorr_file, load_autocorr_from_csv, load_config, get_user_choice_for_existing_file
+    get_unique_filename, check_existing_autocorr_file, load_autocorr_from_csv, load_config, 
+    get_user_choice_for_existing_file, extract_lattice_side, extract_beta
     )
     
 from mcmc_utils import compute_autocorrelations
 from plot_utils import plot_autocorrelations
+from interface_utils import navigate_directories
 
 
 
@@ -34,14 +36,13 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
 
     print("\n===== MCMC Autocorrelation Analysis =====\n")
 
-    # Ask for the input file or folder
-    while True:
-        input_path = input(
-            "Enter the path to the input file or folder: "
-        ).strip()
-        if os.path.exists(input_path):
-            break
-        print("[ERROR] Path does not exist. Please try again.")
+    # Navigate directories to select the input file
+    print("Navigate to select the input file or folder.")
+    input_path = navigate_directories()
+    if not input_path:
+        print("[INFO] No file selected. Exiting...")
+        exit(0)
+
 
     # Ask for max_lag
     max_lag_default = defaults["max_lag_default"]
@@ -57,6 +58,10 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
             break
         except ValueError:
             print("[ERROR] Invalid input. Please enter a number.")
+            
+    # Use x_scale and y_scale from configuration
+    x_scale = defaults["x_scale"]
+    y_scale = defaults["y_scale"]
 
     # Ask for output preferences
     print("\nOutput Directories:")
@@ -93,6 +98,8 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
     print(f"Data Directory: {data_dir}")
     print(f"Plot Directory: {plot_dir}")
     print(f"Separate Plots: {'Yes' if separate_plots else 'No'}")
+    print(f"x_scale: {x_scale}")
+    print(f"y_scale: {y_scale}")
 
     confirm = input("\nIs everything correct? (y/n): ").strip().lower()
     if confirm != "y":
@@ -106,6 +113,8 @@ def get_user_inputs(config_path="mcmc_termalization_config.yaml"):
         "data_dir": data_dir,
         "plot_dir": plot_dir,
         "separate_plots": separate_plots,
+        "x_scale": x_scale,
+        "y_scale": y_scale,
     }
     
     
@@ -130,6 +139,9 @@ if __name__ == "__main__":
     data_dir = user_inputs["data_dir"]
     plot_dir = user_inputs["plot_dir"]
     separate_plots = user_inputs["separate_plots"]
+    # Load x_scale and y_scale from configuration
+    x_scale = user_inputs["x_scale"]
+    y_scale = user_inputs["y_scale"]
 
     ensure_directory(data_dir)
     ensure_directory(plot_dir)
@@ -138,6 +150,9 @@ if __name__ == "__main__":
     files = [input_path] if os.path.isfile(input_path) else [
         os.path.join(input_path, f) for f in os.listdir(input_path) if f.endswith(('.bin', '.dat'))
     ]
+
+    # Load configuration at the start of the script
+    config = load_config(config_path="mcmc_termalization_config.yaml")
 
     for file in files:
         logging.info(f"Processing file: {file}")
@@ -215,12 +230,27 @@ if __name__ == "__main__":
             }
             save_autocorrelations_to_csv(csv_file, autocorr_data)
 
+        
+        
+        
+        # Generate title for the plots
+        lattice_side = extract_lattice_side(file)  
+        beta = extract_beta(file)                  
+        plot_title = config["settings"]["plot_title_format"].format(
+            lattice_side=lattice_side, beta=beta
+        )
+
         # Generate plots
         plot_file_matrix = get_unique_filename(plot_dir, f"{base_name}_autocorr_matrix", ".png", max_lag=max_lag)
         plot_autocorrelations(
             [autocorr_data["mx-mx"], autocorr_data["mx-my"],
              autocorr_data["my-mx"], autocorr_data["my-my"]],
-            ["mx-mx", "mx-my", "my-mx", "my-my"], max_lag, plot_file_matrix, y_scale='log'
+            ["mx-mx", "mx-my", "my-mx", "my-my"], 
+            max_lag, 
+            plot_file_matrix, 
+            x_scale=x_scale,
+            y_scale=y_scale,
+            title=plot_title
         )
         print(f"[INFO] Plot saved to: {plot_file_matrix}")
 
@@ -229,11 +259,20 @@ if __name__ == "__main__":
             plot_autocorrelations([autocorr_data["module_m"]], ["module_m"], max_lag, plot_file_m, y_scale='log')
 
             plot_file_epsilon = get_unique_filename(plot_dir, f"{base_name}_autocorr_epsilon", ".png", max_lag=max_lag)
-            plot_autocorrelations([autocorr_data["epsilon"]], ["epsilon"], max_lag, plot_file_epsilon, y_scale='log')
+            plot_autocorrelations([autocorr_data["epsilon"]], ["epsilon"], max_lag, 
+            plot_file_epsilon, 
+            x_scale=x_scale,
+            y_scale=y_scale,
+            title=plot_title
+        )
         else:
             combined_plot_file = get_unique_filename(plot_dir, f"{base_name}_autocorr_combined", ".png", max_lag=max_lag)
             plot_autocorrelations([autocorr_data["module_m"], autocorr_data["epsilon"]],
-                                  ["module_m", "epsilon"], max_lag, combined_plot_file, y_scale='log')
+                                  ["module_m", "epsilon"], max_lag, combined_plot_file, 
+                                  x_scale=x_scale,
+                                  y_scale=y_scale,
+                                  title=plot_title
+                                  )
         print(f"[INFO] Autocorrelation results and plots saved in '{data_dir}' and '{plot_dir}' respectively.")
 
     logging.info("MCMC Autocorrelation Analysis Completed.")

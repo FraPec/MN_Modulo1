@@ -20,7 +20,7 @@ def truncate_at_first_negative(data):
 
 
 
-def plot_autocorrelations(data_list, labels, max_lag, save_path, style="line", x_scale='linear', y_scale='linear'):
+def plot_autocorrelations(data_list, labels, max_lag, save_path, style="line", x_scale='linear', y_scale='linear', title=None):
     """
     Plot autocorrelations with customizable styles.
 
@@ -30,6 +30,9 @@ def plot_autocorrelations(data_list, labels, max_lag, save_path, style="line", x
         - max_lag: Maximum lag.
         - save_path: Path to save the plot.
         - style: Plot style ('line', 'scatter', 'bar').
+        - x_scale: Scale for the x-axis ('linear' or 'log').
+        - y_scale: Scale for the y-axis ('linear' or 'log').
+        - title: Title of the plot.
     """
     plt.figure(figsize=(10, 6))
     lags = np.arange(max_lag + 1)
@@ -56,9 +59,10 @@ def plot_autocorrelations(data_list, labels, max_lag, save_path, style="line", x
 
     plt.xlabel("Lag")
     plt.ylabel("Autocorrelation")
-    plt.title("Autocorrelation Analysis")
     plt.xscale(x_scale)
     plt.yscale(y_scale)
+    if title:
+        plt.title(title)
     plt.legend()
     plt.grid()
     plt.savefig(save_path, dpi=300)
