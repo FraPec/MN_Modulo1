@@ -132,7 +132,7 @@ def plot_blocking_variance(variances, save_path, title=None, x_label="Block Size
 
     # Create the plot
     plt.figure(figsize=(10, 6))
-    plt.plot(block_sizes, variance_values, label="Blocking Variance", linestyle="", marker=".", markersize = 0.8)
+    plt.plot(block_sizes, variance_values, linestyle="", marker=".", markersize = 0.8)
 
     # Set logarithmic scales for x and y axes
     plt.xscale("log")
@@ -143,7 +143,6 @@ def plot_blocking_variance(variances, save_path, title=None, x_label="Block Size
     plt.ylabel(y_label)
     if title:
         plt.title(title)
-    plt.legend()
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 
     # Save the plot
