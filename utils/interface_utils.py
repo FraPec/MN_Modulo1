@@ -1,5 +1,5 @@
 import os
-from io_utils import load_config
+from io_utils import load_config, ensure_directory
 
 
 
@@ -91,7 +91,8 @@ def navigate_directories(start_path=".", multi_select=False, file_extension=".bi
     return selected_paths
 
 
-def get_user_inputs_for_mcmc_termalization_analysys(config_path="mcmc_termalization_config.yaml"):
+
+def get_user_inputs_for_mcmc_termalization_analysys(config_path="../configs/mcmc_termalization_config.yaml"):
     """
     Interactive interface to ask the user for inputs and preferences.
 
@@ -240,4 +241,276 @@ def get_user_inputs_for_mcmc_termalization_analysys(config_path="mcmc_termalizat
     
 
 
+
+
+
+def get_user_inputs_for_blocking_analysis(config_path="../configs/blocking_config.yaml"):
+    """
+    Interactive interface to ask the user for inputs specific to blocking analysis.
+
+    Parameters:
+        config_path (str): Path to the configuration file.
+
+    Returns:
+        dict: A dictionary containing all user inputs and preferences.
+    """
+    # Load configuration values
+    config = load_config(config_path)
+    defaults = config["settings"]
+    paths = config["paths"]
+    default_files = paths.get("default_files", [])
+
+    print("\n===== Blocking Analysis =====\n")
+
+    input_paths = []
+
+    # Option to choose from default files
+    if default_files:
+        print("Default Files:")
+        for idx, file_path in enumerate(default_files, start=1):
+            print(f"  {idx}. {file_path}")
+        print("  0. None of these (manual entry or navigate)")
+
+        while True:
+            default_choice = input("\nSelect file(s) from the list (e.g., '1 2 3' or 'all', or 0 to skip): ").strip()
+            if default_choice == "0":
+                input_paths = []
+                break
+            elif default_choice.lower() == "all":
+                input_paths = default_files
+                print(f"[INFO] Selected all default files.")
+                break
+            else:
+                try:
+                    selected_indices = list(map(int, default_choice.split()))
+                    if all(1 <= idx <= len(default_files) for idx in selected_indices):
+                        input_paths = [default_files[idx - 1] for idx in selected_indices]
+                        print(f"[INFO] Selected files: {input_paths}")
+                        break
+                except ValueError:
+                    pass
+                print("[ERROR] Invalid choice. Please try again.")
+
+    # Option to manually enter a path
+    if not input_paths:
+        manual_path = input("\nEnter a file or folder path (leave empty to navigate): ").strip()
+        if manual_path:
+            if os.path.exists(manual_path):
+                if os.path.isdir(manual_path):
+                    # Collect all .bin and .dat files in the directory and subdirectories
+                    input_paths = [
+                        os.path.join(root, f)
+                        for root, _, files in os.walk(manual_path)
+                        for f in files if f.endswith(('.bin', '.dat'))
+                    ]
+                    print(f"[INFO] Selected all valid files in the directory and subdirectories: {input_paths}")
+                elif os.path.isfile(manual_path):
+                    input_paths = [manual_path]
+            else:
+                print("[ERROR] Path does not exist. Please try again.")
+                return get_user_inputs_for_blocking_analysis(config_path)
+
+    # Navigate directories if no path is specified
+    if not input_paths:
+        print("\nNavigate to select the input file(s) or folder(s).")
+        input_paths = navigate_directories(start_path=".", multi_select=True, file_extension=".csv")
+        if not input_paths:
+            print("[INFO] No files selected. Exiting...")
+            exit(0)
+
+    # Ask for maximum block size
+    max_block_size_default = defaults.get("max_block_size_default", None)
+    while True:
+        max_block_size_input = input(
+            f"\nEnter the maximum block size (Default: {max_block_size_default}): "
+        ).strip()
+        if not max_block_size_input:
+            max_block_size = max_block_size_default
+            break
+        try:
+            max_block_size = int(max_block_size_input)
+            break
+        except ValueError:
+            print("[ERROR] Invalid input. Please enter a number.")
+
+    # Ask for number of cores
+    num_cores_default = defaults.get("num_cores_default", None)
+    while True:
+        num_cores_input = input(
+            f"\nEnter the number of cores to use (Default: {num_cores_default}): "
+        ).strip()
+        if not num_cores_input:
+            num_cores = num_cores_default
+            break
+        try:
+            num_cores = int(num_cores_input)
+            break
+        except ValueError:
+            print("[ERROR] Invalid input. Please enter a number.")
+
+    # Ask for data output directory
+    print("\nData Directory for CSV outputs:")
+    print(f"  Default: {paths['data_dir']}")
+    data_dir = input("Enter the data directory path (leave empty to use default): ").strip()
+    if not data_dir:
+        data_dir = paths["data_dir"]
+    ensure_directory(data_dir)
+    
+    # Ask for plot output directory
+    print("\nPlot Directory:")
+    print(f"  Default: {paths['plot_dir']}")
+    plot_dir = input("Enter the plot directory path (leave empty to use default): ").strip()
+    if not plot_dir:
+        plot_dir = paths["plot_dir"]
+    ensure_directory(plot_dir)
+
+    # Confirm inputs
+    print("\n===== Summary of Inputs =====")
+    print(f"Input Paths: {input_paths}")
+    print(f"Max Block Size: {max_block_size}")
+    print(f"Number of Cores: {num_cores}")
+    print(f"Data output directory: {data_dir}")
+    print(f"Data output directory: {plot_dir}")
+
+    confirm = input("\nIs everything correct? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("Restarting input collection...\n")
+        return get_user_inputs_for_blocking_analysis(config_path)
+
+    # Return collected inputs as a dictionary
+    return {
+        "input_paths": input_paths,
+        "max_block_size": max_block_size,
+        "num_cores": num_cores,
+        "data_dir": data_dir,
+        "plot_dir": plot_dir,
+    }
+
+
+
+
+
+
+
+def get_user_inputs_for_saving_lattice_metrics_to_csv(config_path="configs/lattice_metrics_to_csv_config.yaml"):
+    """
+    Interactive interface to gather user inputs for the analysis task.
+
+    Parameters:
+        config_path (str): Path to the configuration file.
+
+    Returns:
+        dict: A dictionary containing user-provided input paths and directories.
+    """
+    # Load configuration
+    config = load_config(config_path)
+    paths = config["paths"]
+    default_files = paths.get("default_files", [])
+    output_dir_default = paths.get("output_dir", "./results")
+
+    print("\n===== Analysis Configuration =====\n")
+
+    # Select input files
+    input_paths = []
+    if default_files:
+        print("Default Files:")
+        for idx, file_path in enumerate(default_files, start=1):
+            print(f"  {idx}. {file_path}")
+        print("  0. None (enter manually or navigate)")
+
+        while True:
+            choice = input("Choose files by number (e.g., '1 2') or '0' to skip: ").strip()
+            if choice == "0":
+                break
+            elif choice.lower() == "all":
+                input_paths = default_files
+                break
+            else:
+                try:
+                    indices = list(map(int, choice.split()))
+                    if all(1 <= i <= len(default_files) for i in indices):
+                        input_paths = [default_files[i - 1] for i in indices]
+                        break
+                except ValueError:
+                    print("[ERROR] Invalid choice. Try again.")
+    
+    if not input_paths:
+        print("\nNavigate to select input files.")
+        input_paths = navigate_directories(multi_select=True, file_extension=".bin")
+        if not input_paths:
+            print("[INFO] No files selected. Exiting...")
+            sys.exit(0)
+
+    # Select output directory
+    print("\nOutput Directory:")
+    print(f"Default: {output_dir_default}")
+    output_dir = input("Enter output directory or press Enter for default: ").strip()
+    if not output_dir:
+        output_dir = output_dir_default
+    ensure_directory(output_dir)
+
+    return {
+        "input_paths": input_paths,
+        "output_dir": output_dir
+    }
+
+
+
+def get_user_inputs_for_principal_quantities_means(config_path="..configs/lattices_means_to_csv_config.yaml"):
+    """
+    Interactive interface to gather user inputs for summarizing CSV files.
+
+    Parameters:
+        config_path (str): Path to the configuration file.
+
+    Returns:
+        dict: A dictionary containing user-provided input paths and output configurations.
+    """
+    # Load configuration
+    config = load_config(config_path)
+    paths = config.get("paths", {})
+    
+    # Default values from the configuration file
+    input_dir_default = paths.get("input_dir", "./data/lattice_metrics_csv")
+    output_dir_default = paths.get("output_dir", "./data/summary_metrics")
+    output_file_default = paths.get("output_file", "lattice_means_summary.csv")
+    
+    print("\n===== Summary Analysis Configuration =====\n")
+
+    # Prompt for input directory
+    print(f"Input Directory (Default: {input_dir_default}):")
+    input_dir = input("Enter input directory or press Enter to use the default: ").strip()
+    if not input_dir:
+        input_dir = input_dir_default
+
+    # Prompt for output directory
+    print(f"Output Directory (Default: {output_dir_default}):")
+    output_dir = input("Enter output directory or press Enter to use the default: ").strip()
+    if not output_dir:
+        output_dir = output_dir_default
+
+    # Prompt for output file name
+    print(f"Output File Name (Default: {output_file_default}):")
+    output_file = input("Enter output file name or press Enter to use the default: ").strip()
+    if not output_file:
+        output_file = output_file_default
+
+    # Ensure output directory exists
+    ensure_directory(output_dir)
+
+    print("\n===== Summary of Inputs =====")
+    print(f"Input Directory: {input_dir}")
+    print(f"Output Directory: {output_dir}")
+    print(f"Output File Name: {output_file}")
+
+    confirm = input("\nIs everything correct? (y/n): ").strip().lower()
+    if confirm != "y":
+        print("\nRestarting input collection...")
+        return get_user_inputs_for_principal_quantities_means(config_path)
+
+    return {
+        "input_dir": input_dir,
+        "output_dir": output_dir,
+        "output_file": output_file,
+    }
 

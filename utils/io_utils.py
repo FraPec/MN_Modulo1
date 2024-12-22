@@ -9,7 +9,7 @@ import re
 
 
 
-def setup_logging(log_dir="logs", log_file="mcmc_autocorr.log"):
+def setup_logging(log_dir="../logs", log_file="log_file.log"):
     """
     Sets up the logging system to log messages to a file and the console.
 
@@ -319,4 +319,52 @@ def extract_beta(file_path):
     else:
         logging.warning(f"Beta value not found in file name: {file_path}")
         return None
+        
+        
+        
+def save_blocking_results(output_path, variances, headers=None):
+    """
+    Save blocking results to a CSV file.
+    """
+    ensure_directory(os.path.dirname(output_path))
+    with open(output_path, "w") as file:
+        if headers:
+            file.write(",".join(headers) + "\n")
+        for block_size, variance in variances.items():
+            file.write(f"{block_size},{variance}\n")
+            
+            
+ 
+            
+            
+            
+def save_lattice_metrics_to_csv(output_dir, lattice_side, beta, metrics):
+    """
+    Save the metrics to a CSV file with one row per data point.
+
+    Parameters:
+        output_dir (str): Path to the output directory.
+        lattice_side (int): Lattice side extracted from the filename.
+        beta (float): Beta value extracted from the filename.
+        metrics (dict): Metrics calculated for the input data.
+    """
+    # Ensure lattice-specific subdirectory exists
+    lattice_dir = os.path.join(output_dir, f"L{lattice_side}")
+    ensure_directory(lattice_dir)
+
+    # Construct output file name
+    output_file = os.path.join(lattice_dir, f"data_L{lattice_side}_b{beta:.3f}_summary.csv")
+
+    # Add L and beta to each row
+    num_rows = len(metrics["mx"])  # Assumes all metrics have the same length
+    data = {
+        "L": [lattice_side] * num_rows,
+        "beta": [beta] * num_rows,
+        **metrics  # Expand metrics dictionary into columns
+    }
+    
+    # Convert to DataFrame and save to CSV
+    df = pd.DataFrame(data)
+    df.to_csv(output_file, index=False)
+    print(f"[INFO] Saved CSV file: {output_file}")
     

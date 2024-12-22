@@ -109,4 +109,45 @@ def generate_plots(autocorr_data, plot_dir, base_name, separate_plots):
             save_path=plot_file_combined
         )  
     
-    
+ 
+ 
+ 
+ 
+
+
+def plot_blocking_variance(variances, save_path, title=None, x_label="Block Size", y_label="Variance"):
+    """
+    Plot the blocking variances in reverse order (from largest to smallest block size).
+
+    Parameters:
+        variances (dict): A dictionary where keys are block sizes and values are variances.
+        save_path (str): Path to save the plot.
+        title (str, optional): Title of the plot.
+        x_label (str, optional): Label for the x-axis.
+        y_label (str, optional): Label for the y-axis.
+    """
+    # Reverse the variances (largest block size first)
+    block_sizes = np.array(list(variances.keys()))[::-1]
+    variance_values = np.array(list(variances.values()))[::-1]
+
+    # Create the plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(block_sizes, variance_values, label="Blocking Variance", linestyle="", marker=".", markersize = 0.8)
+
+    # Set logarithmic scales for x and y axes
+    plt.xscale("log")
+    plt.yscale("log")
+
+    # Add labels, title, and legend
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    if title:
+        plt.title(title)
+    plt.legend()
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+
+    # Save the plot
+    plt.savefig(save_path, dpi=300)
+    plt.close()
+
+    print(f"[INFO] Blocking variance plot saved to {save_path}")   
