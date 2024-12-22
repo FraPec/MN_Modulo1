@@ -57,6 +57,7 @@ Makefile
 *.dat
 *.txt
 *.bin
+*.csv
 
 # images 
 *.pdf
@@ -66,4 +67,4 @@ Makefile
 
 # folders
 __pycache__/
-data*/
+
