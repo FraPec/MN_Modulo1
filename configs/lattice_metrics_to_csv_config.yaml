@@ -1,0 +1,8 @@
+
+
+paths:
+  default_files:
+    - ../data/simulation_data/simulations_5_25/data/lattice25/data_b0.455_a1.0_L25.bin
+    - ../data/simulation_data/simulations_5_25/data/lattice25/data_b0.500_a1.0_L25.bin
+    - ../data/simulation_data/simulations_5_25/data/lattice20/data_b0.455_a1.0_L20.bin
+  output_dir: data/lattice_metrics_csv/  # Directory for CSV outputs
