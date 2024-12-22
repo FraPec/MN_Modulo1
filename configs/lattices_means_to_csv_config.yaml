@@ -1,0 +1,24 @@
+settings:
+  csv_output_header: ["L", "beta", "mx_mean", "my_mean", "epsilon_mean", "absm_mean", "m2_mean", "m4_mean"]
+  
+  
+  header_mapping:
+    L: L
+    beta: beta
+    mx_mean: mx
+    my_mean: my
+    epsilon_mean: epsilon
+    absm_mean: absm
+    m2_mean: m2
+    m4_mean: m4
+
+
+
+paths:
+  input_dir: "../data/lattice_metrics_csv"  # Directory with subdirectories for each lattice side
+  output_dir: "../data/principal_quantities"    # Directory to save the output summary CSV file
+  output_file: "../principal_quantities/principal_quantities_means.csv"  # Name of the output CSV file
+  
+  
+  
+
