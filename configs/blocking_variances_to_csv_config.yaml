@@ -1,0 +1,8 @@
+settings:
+  block_size_threshold_default: 3000
+  csv_output_header: ["L", "beta", "var_mx", "var_my", "var_epsilon", "var_absm", "var_m2", "var_m4"]
+
+paths:
+  input_dir: "../data/blocking_data"
+  output_dir: "../data/principal_quantities"
+  output_file: "principal_quantities_variances.csv"
