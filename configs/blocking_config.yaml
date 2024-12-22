@@ -8,5 +8,8 @@ paths:
   data_dir: "../data/blocking_data"
   plot_dir: "../plots/blocking_plots"
   default_files: 
-    - "../../../../../../../../../../Volumes/SANDISK 1/data/lattice_metrics_csv/L12/data_L12_b0.443_summary.csv"
+    - "../data/blocking_data/L9/data_L9_b0.453_summary_blocking_10000.csv"
+    - "../data/blocking_data/L18/data_L18_b0.453_summary_blocking_10000.csv"
+    - "../data/blocking_data/L30/data_L30_b0.453_summary_blocking_10000.csv"
+    
     
