@@ -5,12 +5,15 @@ paths:
   docs_dir: "../docs/mcmc_termalization_docs/"
   tests_dir: "../tests"
   default_files:
-    - "../data/simulation_data/simulations_5_25/data/lattice25/data_b0.500_a1.0_L25.bin"
-    - "../data/simulation_data/simulations_5_25/data/lattice25/data_b0.455_a1.0_L25.bin"
-    - "../data/simulation_data/simulations_5_25/data/lattice20/data_b0.500_a1.0_L20.bin"
-    - "../data/simulation_data/simulations_5_25/data/lattice20/data_b0.455_a1.0_L20.bin"
-    - "../data/simulation_data/simulations_5_25/data/lattice5/data_b0.500_a1.0_L5.bin"
-    - "../data/simulation_data/simulations_5_25/data/lattice5/data_b0.455_a1.0_L5.bin"
+    - "../data/simulation_data/simulations_9_30/data/lattice30/data_b0.45336_L30.bin"         # lower-critical beta (T slightly upper thant Tc)
+    - "../data/simulation_data/simulations_9_30/data/lattice30/data_b0.45504_L30.bin"         # upper-critical beta (T slightly lower thant Tc)
+    - "../data/simulation_data/simulations_9_30/data/lattice30/data_b0.46680_L30.bin"         # highest beta (lower T)
+    - "../data/simulation_data/simulations_9_30/data/lattice18/data_b0.45336_L18.bin"    
+    - "../data/simulation_data/simulations_9_30/data/lattice18/data_b0.45504_L18.bin"    
+    - "../data/simulation_data/simulations_9_30/data/lattice18/data_b0.46680_L18.bin"    
+    - "../data/simulation_data/simulations_9_30/data/lattice9/data_b0.45336_L9.bin"
+    - "../data/simulation_data/simulations_9_30/data/lattice9/data_b0.45504_L9.bin"
+    - "../data/simulation_data/simulations_9_30/data/lattice9/data_b0.46680_L9.bin"  
 
 settings:
   max_lag_default: 1000

@@ -1,7 +1,11 @@
-import numpy as np
 import os
+import logging
+import numpy as np
+import pandas as pd
 from multiprocessing import Pool
-from io_utils import ensure_directory
+from io_utils import ensure_directory, extract_lattice_side, extract_beta
+from plot_utils import plot_blocking_variance
+
 
 def blocking(data, block_size):
     """

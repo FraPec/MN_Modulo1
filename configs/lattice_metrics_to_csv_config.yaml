@@ -1,8 +1,9 @@
-
-
 paths:
   default_files:
-    - ../data/simulation_data/simulations_5_25/data/lattice25/data_b0.455_a1.0_L25.bin
-    - ../data/simulation_data/simulations_5_25/data/lattice25/data_b0.500_a1.0_L25.bin
-    - ../data/simulation_data/simulations_5_25/data/lattice20/data_b0.455_a1.0_L20.bin
-  output_dir: data/lattice_metrics_csv/  # Directory for CSV outputs
+    - ../data/simulation_data/simulations_9_30/data/lattice30/data_b0.45336_L30.bin
+    - ../data/simulation_data/simulations_9_30/data/lattice18/data_b0.45336_L18.bin
+    - ../data/simulation_data/simulations_9_30/data/lattice9/data_b0.45336_L9.bin
+  output_dir: ../data/lattice_metrics_csv/  # Directory for CSV outputs
+  
+settings:
+  index_threshold : '250' #Value setted after performing the mcmc termalization analysis

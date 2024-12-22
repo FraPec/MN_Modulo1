@@ -1,4 +1,5 @@
 import os
+import logging
 from io_utils import load_config, ensure_directory
 
 
@@ -407,6 +408,7 @@ def get_user_inputs_for_saving_lattice_metrics_to_csv(config_path="configs/latti
     paths = config["paths"]
     default_files = paths.get("default_files", [])
     output_dir_default = paths.get("output_dir", "./results")
+    index_threshold = config["settings"].get("index_threshold")
 
     print("\n===== Analysis Configuration =====\n")
 
@@ -451,7 +453,8 @@ def get_user_inputs_for_saving_lattice_metrics_to_csv(config_path="configs/latti
 
     return {
         "input_paths": input_paths,
-        "output_dir": output_dir
+        "output_dir": output_dir,
+        "index_threshold": index_threshold,
     }
 
 
