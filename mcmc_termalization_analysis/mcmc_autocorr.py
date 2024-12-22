@@ -18,8 +18,6 @@ from plot_utils import plot_autocorrelations
 from interface_utils import navigate_directories, get_user_inputs_for_mcmc_termalization_analysys
 
 
-
-
     
     
 
@@ -30,7 +28,7 @@ if __name__ == "__main__":
     """
 
     # Set up logging
-    setup_logging()
+    setup_logging(log_dir="../logs", log_file="mcmc_autocorr.log")
     logging.info("Starting MCMC Autocorrelation Analysis...")
 
     # Collect user inputs
