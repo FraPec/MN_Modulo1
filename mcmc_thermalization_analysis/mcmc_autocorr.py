@@ -98,7 +98,7 @@ if __name__ == "__main__":
                 }
                 save_autocorrelations_to_csv(csv_file, autocorr_data)
             elif action == "exit":
-                print("[INFO] Exiting script as per user request.")
+                logging.info("Exiting script as per user request.")
                 sys.exit(0)
             elif action == "plot_only":
                 logging.info(f"Proceeding to plot using existing file: {csv_file}")
@@ -147,7 +147,7 @@ if __name__ == "__main__":
             y_scale=y_scale,
             title=plot_title
         )
-        print(f"[INFO] Plot saved to: {plot_file_matrix}")
+        logging.info(f"Plot saved to: {plot_file_matrix}")
 
         if separate_plots:
             plot_file_m = get_unique_filename(plot_dir, f"{base_name}_autocorr_module_m", ".png", max_lag=max_lag)
@@ -168,6 +168,6 @@ if __name__ == "__main__":
                                   y_scale=y_scale,
                                   title=plot_title
                                   )
-        print(f"[INFO] Autocorrelation results and plots saved in '{data_dir}' and '{plot_dir}' respectively.")
+        logging.info(f"Autocorrelation results and plots saved in '{data_dir}' and '{plot_dir}' respectively.")
 
     logging.info("MCMC Autocorrelation Analysis Completed.")
