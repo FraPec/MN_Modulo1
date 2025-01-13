@@ -28,9 +28,9 @@ def blocking_data(data, block_size):
     
     return block_means
 
-def jackknife_sample_generation(data):
+def jackknife_means_generation(data):
     """
-    Perform jackknife resampling on a dataset.
+    Create a Jackknife sample of a dataset.
 
     Parameters:
     data (numpy.ndarray): 1D array of data points.
@@ -45,34 +45,50 @@ def jackknife_sample_generation(data):
     mask = np.ones((n, n), dtype=bool)
     mask[np.arange(n), indices] = False
 
-    print(mask)
-
     # Create an n x n matrix where each row is a copy of the original data
     data_matrix = np.outer(np.ones(n), data)
-    
-    print(data_matrix)
 
     # Use the mask to select N-1 elements for each sample
-    jackknife_samples = data_matrix[mask].reshape((n, n-1))
-
-    print(jackknife_samples)
-
+    jackknife_samples = data_matrix[mask].reshape((n, n-1)) # data must be reshaped, otherwise we obtain a 1D array of len n x (n-1)
     # Compute the mean of each jackknife sample
     jackknife_means = np.mean(jackknife_samples, axis=1)
-    
-    print(jackknife_means)
+
     return jackknife_means
+
+def binder_var_jk(m_squared, m_fourth):
+
+    m_squared_jk = jackknife_means_generation(m_squared)
+    m_fourth_jk = jackknife_means_generation(m_fourth)
+    U = m_fourth_jk / m_squared_jk**2
+    
+    return np.var(U, ddof=1) * (len(U) - 1)
+
+def chi_prime_var_jk(m, m_squared, beta, L, D):
+
+    m_jk = jackknife_means_generation(m)
+    m_squared_jk = jackknife_means_generation(m_squared)
+    var_m = m_squared_jk - m_jk**2 
+    
+    chi_prime_var = np.var(var_m, ddof=1) * (len(var_m) - 1) * beta * L**D 
+    return chi_prime_var
+
+
 
 
 if __name__=="__main__":
 
-    data = np.linspace(0,100, 101)
-
-    blocked_data = blocking_data(data, 11)
-    print(data)
-    print(blocked_data)
-
-    print("jackknife procedure...\n\n")
-    jackknife_sample = jackknife_sample_generation(blocked_data)
-
+    data = np.random.normal(loc=0., scale=1.0, size=10000)
+    data_squared = data**2
+    data_fourth = data**4
+    
+    binder = np.mean(data_fourth) / np.mean(data_squared)**2
+    var_U = binder_var_jk(data_squared, data_fourth)
+    print(f"U = {binder} +- {np.sqrt(var_U)}")
+    
+    beta = 1.0; L = 1.0; D = 1.0
+    variance = np.mean(data_squared) - np.mean(data)**2
+    var_variance = chi_prime_var_jk(data, data_squared, beta, L, D)
+    print(f"variance = {variance} +- {np.sqrt(var_variance)}, expected error = {np.sqrt(2 / (len(data)-1))}")
+    
+    
 
