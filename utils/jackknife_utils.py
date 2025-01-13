@@ -56,24 +56,42 @@ def jackknife_means_generation(data):
     return jackknife_means
 
 def binder_var_jk(m_squared, m_fourth):
+    """
+    Compute the variance for the Binder cumulant, U = <m^4> / <m^2>^2 .
 
+    Parameters:
+        m_squared (numpy.ndarray): 1D array of the dataset to the second power
+        m_fourth (numpy.ndarray): 1D array of the dataset to the fourth power
+
+    Returns:
+        var_U (float): variance of Binder cumulant
+    """
     m_squared_jk = jackknife_means_generation(m_squared)
     m_fourth_jk = jackknife_means_generation(m_fourth)
     U = m_fourth_jk / m_squared_jk**2
-    
-    return np.var(U, ddof=1) * (len(U) - 1)
+    var_U = np.var(U, ddof=1) * (len(U) - 1) 
+    return var_U
 
 def chi_prime_var_jk(m, m_squared, beta, L, D):
+    """
+    Compute the variance for the Chi prime = beta * L^D * (<m^2> - <m>^2).
 
+    Parameters:
+        m (numpy.ndarray): 1D array of the dataset
+        m_squared (numpy.ndarray): 1D array of the dataset to the second power
+        beta (float): reciprocal of the temperature
+        L (int): lattice size
+        D (int): dimensionality
+
+    Returns:
+        var_U (float): variance of Binder cumulant
+    """
     m_jk = jackknife_means_generation(m)
     m_squared_jk = jackknife_means_generation(m_squared)
     var_m = m_squared_jk - m_jk**2 
     
     chi_prime_var = np.var(var_m, ddof=1) * (len(var_m) - 1) * beta * L**D 
     return chi_prime_var
-
-
-
 
 if __name__=="__main__":
 
