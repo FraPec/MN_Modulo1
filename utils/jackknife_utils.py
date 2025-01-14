@@ -1,7 +1,9 @@
-from time import time
+import os
 import numpy as np
+import pandas as pd
 from multiprocessing import Pool
 from io_utils import ensure_directory, extract_lattice_side, extract_beta
+from interface_utils import navigate_directories
 
 def blocking_data(data, block_size):
     """
@@ -36,9 +38,9 @@ def blocking_data_parallel(data, max_block_size, num_cores=None):
     """
 
     with Pool(processes=num_cores) as pool:
-        block_sizes = range(1, max_block_size + 1)
+        block_sizes = np.arange(1, max_block_size + 1)
         blocked_data = pool.starmap(blocking_data, [(data, bs) for bs in block_sizes])
-    return dict(zip(block_sizes, blocked_data))
+    return block_sizes, blocked_data
 
 def jackknife_means_generation(data):
     """
@@ -101,33 +103,70 @@ def chi_prime_var_jk(m, m_squared, beta, L, D):
     chi_prime_var = np.var(var_m, ddof=1) * (len(var_m) - 1) * beta * L**D 
     return chi_prime_var
 
+def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, max_block_size):
+    """
+    Performs data analysis on input files and saves the results.
+
+    This function reads data from specified input paths, processes the data using 
+    blocking analysis, calculates variances for chi prime and the Binder cumulant 
+    using jackknife resampling, and saves the processed data to output files.
+
+    Parameters:
+        input_paths (list of str): List of file paths to the input CSV files. Each file 
+                                   should contain columns for 'L', 'beta', 'absm', 'm2', and 'm4'.
+        output_dir (str): Directory where the output files will be saved. A subdirectory 
+                          is created for each lattice size.
+        first_index (int): Index to start reading the data from each input file, allowing 
+                           for skipping initial rows (e.g., for equilibration).
+        num_cores (int): Number of CPU cores to use for parallel processing in the 
+                         blocking analysis.
+        max_block_size (int): Maximum block size to use in the blocking analysis.
+
+    Returns:
+        None
+    """
+    D = 3
+    columns_to_process = ["L", "beta", "absm", "m2", "m4"]
+    df_list = []
+    lattice_list = []
+    beta_list = []
+
+    for path in input_paths:
+        df = pd.read_csv(path)[columns_to_process][first_index:]
+        df_list.append(df)
+        lattice_list.append(df["L"].iloc[0])
+        beta_list.append(df["beta"].iloc[0])
+
+    for L, beta, df in zip(lattice_list, beta_list, df_list):
+        absm, m2, m4 = df["absm"].values, df["m2"].values, df["m4"].values
+        block_sizes, absm_blocked = blocking_data_parallel(absm, max_block_size, num_cores=num_cores)
+        m2_blocked = blocking_data_parallel(m2, max_block_size, num_cores=num_cores)[1]
+        m4_blocked = blocking_data_parallel(m4, max_block_size, num_cores=num_cores)[1]
+
+        var_chi_prime = []
+        var_U = []
+        for absm_blk, m2_blk, m4_blk in zip(absm_blocked, m2_blocked, m4_blocked):
+            var_U.append(binder_var_jk(m2_blk, m4_blk))
+            var_chi_prime.append(chi_prime_var_jk(absm_blk, m2_blk, beta, L, D))
+
+        output_df = pd.DataFrame({
+            'block_size': block_sizes,
+            'L': L,
+            'beta': beta,
+            'var_chi_prime': var_chi_prime,
+            'var_U': var_U
+        })
+
+        subfolder = os.path.join(output_dir, f'L{L}')
+        ensure_directory(subfolder)
+        output_path = os.path.join(subfolder, f'data_L{L}_{beta}_jackknife_blocking.csv')
+        output_df.to_csv(output_path, index=False)
 
 if __name__=="__main__":
+    input_paths = navigate_directories(start_path=".", multi_select=True, file_extension=".csv")
+    output_dir = "./output"
+    first_index = 5000
+    num_cores = 4
+    max_block_size = 100
 
-    data = np.random.normal(loc=0., scale=1.0, size=1000000)
-    data_squared = data**2
-    data_fourth = data**4
-    
-    t0 = time()
-    num_cores = 1
-    blocked_data_dic = blocking_data_parallel(data, 5000, num_cores=num_cores)
-    blocked_data_squared_dic = blocking_data_parallel(data_squared, 5000, num_cores=num_cores)
-    blocked_data_fourth_dic = blocking_data_parallel(data_fourth, 5000, num_cores=num_cores)
-    print(f"time: {time()-t0}s")
-
-
-    blocked_data = blocked_data_dic[1]
-    blocked_data_squared = blocked_data_squared_dic[1]
-    blocked_data_fourth = blocked_data_fourth_dic[1]
-
-    binder = np.mean(data_fourth) / np.mean(data_squared)**2
-    var_U = binder_var_jk(blocked_data_squared, blocked_data_fourth)
-    print(f"U = {binder} +- {np.sqrt(var_U)}")
-    
-    beta = 1.0; L = 1.0; D = 1.0
-    variance = np.mean(data_squared) - np.mean(data)**2
-    var_variance = chi_prime_var_jk(blocked_data, blocked_data_squared, beta, L, D)
-    print(f"variance = {variance} +- {np.sqrt(var_variance)}, expected error = {np.sqrt(2 / (len(data)-1))}")
-    
-    
-
+    perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, max_block_size)
