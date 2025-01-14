@@ -104,7 +104,7 @@ def chi_prime_var_jk(m, m_squared, beta, L, D):
     chi_prime_var = np.var(var_m, ddof=1) * (len(var_m) - 1) * beta * L**D 
     return chi_prime_var
 
-def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, max_block_size):
+def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, num_cores, max_block_size):
     """
     Performs data analysis on input files and saves the results.
 

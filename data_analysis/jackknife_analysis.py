@@ -7,7 +7,7 @@ import numpy as np
 # Add the utils directory to the system path to import custom utility functions
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/')))
 from io_utils import ensure_directory, setup_logging, load_config, prompt_user_choice
-from jackknife_utils import plot_jackknife_variances, perform_jackknife_blocking
+from jackknife_utils import plot_jackknife_variances, perform_jackknife_blocking_analysis
 from interface_utils import navigate_directories, get_user_inputs_for_jackknife
 
 
@@ -31,11 +31,11 @@ if __name__ == "__main__":
 
         # Ask the user if they want to adjust the configuration
         if not prompt_user_choice("Is this configuration correct?"):
-            config = update_configuration_jackknife(config)
+            config = get_user_inputs_for_jackknife(config)
 
         # Perform the Jackknife blocking analysis if confirmed by the user
-        if prompt_user_choice("Do you want to perform jackknife + blocking?"):
-            perform_jackknife_blocking(config['paths']['default_files'], config['paths']['output_dir'], 
+        if prompt_user_choice(f"Do you want to perform jackknife + blocking for all blocksizes less than {config['settings']['max_block_size_default']}?"):
+            perform_jackknife_blocking_analysis(config['paths']['default_files'], config['paths']['output_dir'], 
                                        config['settings']['first_index'], config['settings']['num_cores_default'], 
                                        config['settings']['max_block_size_default'])
 
