@@ -6,7 +6,7 @@ settings:
 
 paths:
   log_dir: "../logs"
-  data_dir: "../data/jackknife_data"
+  output_dir: "../data/jackknife_data"
   plot_dir: "../plots/jackknife_plots"
   default_files: 
     - "../data/lattice_metrics_csv/L9/data_L9_b0.453_summary.csv"

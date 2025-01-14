@@ -150,3 +150,44 @@ def plot_blocking_variance(variances, save_path, title=None, x_label="Block Size
     plt.close()
 
     print(f"[INFO] Blocking variance plot saved to {save_path}")   
+
+
+
+
+
+
+def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=None, x_label="Block Size", y_label="Variance"):
+    """
+    Plot the variances obtained from Jackknife + blocking procedure against the blocksizes
+
+    Parameters:
+        variances (numpy.ndarray): A numpy array containing the variance of the variable we are analyzing 
+        blocksizes (numpy.ndarray): A numpy array containing the corresponding blocksizes
+        title (str, optional): Title of the plot.
+        x_label (str, optional): Label for the x-axis.
+        y_label (str, optional): Label for the y-axis.
+    
+    Returns:
+        None
+    """
+    # Create the plot
+    plt.figure(figsize=(10, 6)) 
+    plt.plot(blocksizes, variances, linestyle="", marker=".", markersize = 0.8)
+
+    # Set logarithmic scales for x and y axes
+    plt.xscale("log")
+    plt.yscale("log")
+
+    # Add labels, title, and legend
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    if title:
+        plt.title(title)
+    plt.grid(True, which="both", linestyle="--", linewidth=0.5)
+
+    # Save the plot
+    plt.savefig(save_path, dpi=300)
+    plt.close()
+    
+
+
