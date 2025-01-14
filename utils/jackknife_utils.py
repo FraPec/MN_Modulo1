@@ -4,6 +4,7 @@ import pandas as pd
 from multiprocessing import Pool
 from io_utils import setup_logging, prompt_user_choice, load_config, ensure_directory, extract_lattice_side, extract_beta
 from interface_utils import navigate_directories
+from plot_utils import plot_jackknife_blocking_variance
 
 def blocking_data(data, block_size):
     """
@@ -161,4 +162,20 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         ensure_directory(subfolder)
         output_path = os.path.join(subfolder, f'data_L{L}_{beta}_jackknife_blocking.csv')
         output_df.to_csv(output_path, index=False)
+
+
+def plot_jackknife_variances(df, plot_dir, base_name):
+    """Generate and save plots for the variance data."""
+    blocksizes = df["block_size"]
+    
+    # Plot for variance of U
+    var_U = df["var_U"]
+    save_path = os.path.join(plot_dir, f"{base_name}_var_U.png")
+    plot_jackknife_blocking_variance(var_U, blocksizes, save_path, title=None, x_label="Block Size", y_label="Variance")
+
+    # Plot for variance of chi prime
+    var_chi_prime = df["var_chi_prime"]
+    save_path = os.path.join(plot_dir, f"{base_name}_var_chi_prime.png")
+    plot_jackknife_blocking_variance(var_chi_prime, blocksizes, save_path, title=None, x_label="Block Size", y_label="Variance")
+
 

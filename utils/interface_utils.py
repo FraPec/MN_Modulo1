@@ -517,3 +517,31 @@ def get_user_inputs_for_principal_quantities_means(config_path="..configs/lattic
         "output_file": output_file,
     }
 
+
+def get_user_inputs_for_jackknife(config):
+    """Update the configuration based on user input."""
+    # Prompt user for 'first_index' with a default value
+    first_index_input = input(f"Enter first index (default: {config['settings']['first_index']}): ").strip()
+    config['settings']['first_index'] = int(first_index_input) if first_index_input else config['settings']['first_index']
+
+    # Prompt user for 'max_block_size_default' with a default value
+    max_block_size_input = input(f"Enter max block size (default: {config['settings']['max_block_size_default']}): ").strip()
+    config['settings']['max_block_size_default'] = int(max_block_size_input) if max_block_size_input else config['settings']['max_block_size_default']
+
+    # Prompt user for 'num_cores_default' with a default value
+    num_cores_input = input(f"Enter number of cores (default: {config['settings']['num_cores_default']}): ").strip()
+    config['settings']['num_cores_default'] = int(num_cores_input) if num_cores_input else config['settings']['num_cores_default']
+
+    # Prompt user for 'data_columns' with a default value
+    data_columns_input = input(f"Enter data columns as comma-separated values (default: {','.join(config['settings']['data_columns'])}): ").strip()
+    config['settings']['data_columns'] = data_columns_input.split(',') if data_columns_input else config['settings']['data_columns']
+
+    # Prompt user for directory paths with default values
+    config['paths']['log_dir'] = input(f"Enter log directory (default: {config['paths']['log_dir']}): ").strip() or config['paths']['log_dir']
+    config['paths']['output_dir'] = input(f"Enter output data directory (default: {config['paths']['output_dir']}): ").strip() or config['paths']['output_dir']
+    config['paths']['plot_dir'] = input(f"Enter plot directory (default: {config['paths']['plot_dir']}): ").strip() or config['paths']['plot_dir']
+
+    # Optionally update input paths
+    config['paths']['default_files'] = navigate_directories(start_path=".", multi_select=True, file_extension=".csv")
+
+    return config
