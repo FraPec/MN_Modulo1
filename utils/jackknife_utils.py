@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool
-from io_utils import ensure_directory, extract_lattice_side, extract_beta
+from io_utils import setup_logging, prompt_user_choice, load_config, ensure_directory, extract_lattice_side, extract_beta
 from interface_utils import navigate_directories
 
 def blocking_data(data, block_size):
@@ -162,11 +162,3 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         output_path = os.path.join(subfolder, f'data_L{L}_{beta}_jackknife_blocking.csv')
         output_df.to_csv(output_path, index=False)
 
-if __name__=="__main__":
-    input_paths = navigate_directories(start_path=".", multi_select=True, file_extension=".csv")
-    output_dir = "./output"
-    first_index = 5000
-    num_cores = 4
-    max_block_size = 100
-
-    perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, max_block_size)
