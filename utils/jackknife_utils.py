@@ -1,8 +1,9 @@
 import os
 import numpy as np
 import pandas as pd
+import logging
 from multiprocessing import Pool
-from io_utils import setup_logging, prompt_user_choice, load_config, ensure_directory, extract_lattice_side, extract_beta
+from io_utils import prompt_user_choice, load_config, ensure_directory, extract_lattice_side, extract_beta
 from interface_utils import navigate_directories
 from plot_utils import plot_jackknife_blocking_variance
 
@@ -137,7 +138,9 @@ def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, nu
         df_list.append(df)
         lattice_list.append(df["L"].iloc[0])
         beta_list.append(df["beta"].iloc[0])
-
+    
+    total_files_to_process = len(df_list)
+    processed_files = 1
     for L, beta, df in zip(lattice_list, beta_list, df_list):
         absm, m2, m4 = df["absm"].values, df["m2"].values, df["m4"].values
         block_sizes, absm_blocked = blocking_data_parallel(absm, max_block_size, num_cores=num_cores)
@@ -157,11 +160,94 @@ def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, nu
             'var_chi_prime': var_chi_prime,
             'var_U': var_U
         })
-
+        
         subfolder = os.path.join(output_dir, f'L{L}')
         ensure_directory(subfolder)
         output_path = os.path.join(subfolder, f'data_L{L}_{beta}_jackknife_blocking.csv')
         output_df.to_csv(output_path, index=False)
+        logging.info(f"Blocking + JK analysis: processed and saved lattice {L} with beta {beta}, {processed_files}/{total_files_to_process}.\n")
+        processed_files += 1
+
+def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, block_size):
+    """
+    Performs jackknife + blocking for all the file selected, JUST for the chosen blocksize
+
+    This function reads data from specified input paths, processes the data using 
+    blocking, calculates variances for chi prime and the Binder cumulant using 
+    jackknife resampling, and saves the processed data to 2 output files, one for 
+    the means and one for the variances.
+
+    Parameters:
+        input_paths (list of str): List of file paths to the input CSV files. Each file 
+                                   should contain columns for 'L', 'beta', 'absm', 'm2', and 'm4'.
+        output_dir (str): Directory where the output files will be saved.
+        first_index (int): Index to start reading the data from each input file, allowing 
+                           for skipping initial rows (e.g., for equilibration).
+        num_cores (int): Number of CPU cores to use for parallel processing in the 
+                         blocking analysis.
+        block_size (int): Block size chosen to use in the blocking analysis.
+
+    Returns:
+        None
+    """
+    D = 3
+    columns_to_process = ["L", "beta", "absm", "m2", "m4"]
+    df_list = []
+    lattice_list = []
+    beta_list = []
+
+    chi_prime_mean = []
+    var_chi_prime = []
+    U_mean = []
+    var_U = []
+
+    total_files_to_process = len(input_paths)
+    processed_files = 1
+    
+    for path in input_paths:
+        df = pd.read_csv(path)[columns_to_process][first_index:]
+        df_list.append(df)
+        L = df["L"].iloc[0]
+        beta = df["beta"].iloc[0]
+        lattice_list.append(L)
+        beta_list.append(beta)
+   
+        absm, m2, m4 = df["absm"].values, df["m2"].values, df["m4"].values
+
+        absm_blocked = blocking_data(absm, block_size)
+        m2_blocked = blocking_data(m2, block_size)
+        m4_blocked = blocking_data(m4, block_size)
+        
+        chi_prime_mean.append((np.mean(m2) - np.mean(absm)**2) * beta * L**D)
+        var_chi_prime.append(chi_prime_var_jk(absm_blocked, m2_blocked, beta, L, D))
+        U_mean.append(np.mean(m4) / np.mean(m2)**2)
+        var_U.append(binder_var_jk(m2_blocked, m4_blocked))
+
+        logging.info(f"Loaded and processed lattice {L} with beta {beta}, {processed_files}/{total_files_to_process}.\n")
+        processed_files += 1
+ 
+
+    df_vars = pd.DataFrame({
+        'L': lattice_list,
+        'beta': beta_list,
+        'var_chi_prime': var_chi_prime,
+        'var_U': var_U
+    })
+
+    ensure_directory(output_dir)
+    output_path = os.path.join(output_dir, f'secondary_quantities_variances.csv')
+    df_vars.to_csv(output_path, index=False)
+    
+    df_means = pd.DataFrame({
+        'L': lattice_list,
+        'beta': beta_list,
+        'chi_prime_mean': chi_prime_mean,
+        'U_mean': U_mean
+    })
+
+    output_path = os.path.join(output_dir, f'secondary_quantities_means.csv')
+    df_means.to_csv(output_path, index=False)
+
 
 
 def plot_jackknife_variances(df, plot_dir, base_name):
