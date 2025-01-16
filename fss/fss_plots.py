@@ -12,7 +12,10 @@ from fss_utils import prepare_dataset_fss_plot
 from interface_utils import get_user_input_for_fss_plot
 
 if __name__=='__main__':
-    
+    """
+    Main to perform plots of means of secondary variables vs beta, 
+    with relative standard deviations as errors on y axis
+    """
     # Setup logging
     log_dir = "../logs/"
     log_file = "fss_plot.log"
@@ -41,8 +44,8 @@ if __name__=='__main__':
         
         for variable, variable_latex in zip(variables_to_plot, variables_names_latex):
             save_path = os.path.join(plot_dir, f"{variable}_vs_beta_different_L.png")
-            beta_list, means_data_set_list, vars_data_set_list, L_list = prepare_dataset_fss_plot(df_means, df_vars, variable)
-            plot_fss_with_errors(beta_list, means_data_set_list, vars_data_set_list, lattice_side_list=L_list, marker='o', cmap='tab10', xlabel="beta", ylabel=variable_latex, save_path=save_path)
+            beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, df_vars, variable)
+            plot_fss_with_errors(beta_list, means_data_set_list, std_devs_data_set_list, lattice_side_list=L_list, marker='o', cmap='tab10', xlabel="beta", ylabel=variable_latex, save_path=save_path)
         
     except Exception as main_e:
         # Log any unexpected errors

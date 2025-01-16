@@ -21,12 +21,14 @@ def prepare_dataset_fss_plot(df_means, df_vars, variable_name):
     df_means_sorted_b = df_means.sort_values(by='beta')
     df_vars_sorted_b = df_vars.sort_values(by='beta')
     means_data_set_list = []
-    vars_data_set_list = []
+    std_devs_data_set_list = []
     beta_list = []
     L_list = np.unique(df_vars_sorted_b["L"].values)
     for L in L_list:
-        vars_data_set_list.append(df_vars_sorted_b[df_vars_sorted_b["L"]==L][f"var_{variable_name}"].values)
+        std_devs_data_set_list.append(np.sqrt(df_vars_sorted_b[df_vars_sorted_b["L"]==L][f"var_{variable_name}"].values))
         means_data_set_list.append(df_means_sorted_b[df_means_sorted_b["L"]==L][f"{variable_name}_mean"].values)
         beta_list.append(df_means_sorted_b[df_means_sorted_b["L"]==L]["beta"].values)
     
-    return beta_list, means_data_set_list, vars_data_set_list, L_list
+    return beta_list, means_data_set_list, std_devs_data_set_list, L_list
+
+
