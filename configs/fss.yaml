@@ -1,0 +1,8 @@
+paths:
+  file_name_means: "../secondary_quantities/secondary_quantities_means.csv"
+  file_name_vars: "../secondary_quantities/secondary_quantities_variances.csv"
+  plot_dir: "../plots/fss_plots"
+
+settings:
+  variables_to_plot: ["U", "chi_prime"]
+  variables_names_latex: ["U", "$\\chi$'"]

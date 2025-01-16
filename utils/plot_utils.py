@@ -192,7 +192,7 @@ def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=Non
     plt.close()
     
 
-def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$"):
+def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$", save_path=False):
     """ 
     Plots multiple datasets, one for each lattice_side, with error bars, distinct colors, and empty markers.
     
@@ -226,5 +226,7 @@ def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, mar
     plt.xlabel(xlabel, fontsize=20)
     plt.ylabel(ylabel, fontsize=20)
     plt.grid()
-    plt.show()
+    if save_path:
+        plt.savefig(save_path, dpi=300)
+    plt.close()
 
