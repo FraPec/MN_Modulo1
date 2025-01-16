@@ -1,5 +1,7 @@
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 
 def truncate_at_first_negative(data):
@@ -190,4 +192,39 @@ def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=Non
     plt.close()
     
 
+def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$"):
+    """ 
+    Plots multiple datasets, one for each lattice_side, with error bars, distinct colors, and empty markers.
+    
+    Parameters:
+        x_values (list of arrays): List of arrays where each array represents the x-values for a dataset.
+        y_values (list of arrays): List of arrays where each array represents the y-values for a dataset.
+        errors (list of arrays): List of arrays where each array contains the errors for the corresponding y-values.
+        lattice_side_list (list of int, optional): List of lattice side lengths for each dataset.
+        marker (str): Marker style, 'o' for circular markers by default.
+        cmap (str): Name of the colormap to use for generating distinct colors.
+        xlabel (str): Label for the x-axis.
+        ylabel (str): Label for the y-axis.
+    
+    Returns:
+        None
+    """
+    num_datasets = len(y_values)
+    colors = matplotlib.colormaps.get_cmap(cmap)(np.linspace(0, 1, num_datasets))  # Corrected line
+    
+    plt.figure(figsize=(10, 6))
+    for i, (x, y, y_err) in enumerate(zip(x_values, y_values, errors)):
+        if np.all(lattice_side_list):
+            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i],
+                         label=f'L {lattice_side_list[i]}')
+        else:
+            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i])
+    
+    plt.legend(fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.xlabel(xlabel, fontsize=20)
+    plt.ylabel(ylabel, fontsize=20)
+    plt.grid()
+    plt.show()
 
