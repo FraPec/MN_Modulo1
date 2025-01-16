@@ -6,9 +6,10 @@ import pandas as pd
 
 # Add the utils directory to the system path to import custom utility functions
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/')))
-from io_utils import setup_logging, load_config, ensure_directory
+from io_utils import setup_logging, load_config, ensure_directory, prompt_user_choice
 from plot_utils import plot_fss_with_errors
 from fss_utils import prepare_dataset_fss_plot
+from interface_utils import get_user_input_for_fss_plot
 
 if __name__=='__main__':
     
@@ -24,6 +25,10 @@ if __name__=='__main__':
         print("Loaded configuration:")
         for key, value in config.items():
             print(f"{key}: {value}\n")
+        
+        # Ask the user if they want to adjust the configuration
+        if not prompt_user_choice("Is this configuration correct?"):
+            config = get_user_input_for_fss_plot(config)
         
         plot_dir = config["paths"]["plot_dir"]
         ensure_directory(plot_dir)

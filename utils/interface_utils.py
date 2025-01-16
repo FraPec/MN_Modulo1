@@ -550,3 +550,27 @@ def get_user_inputs_for_jackknife(config):
     config['paths']['default_files_4_singleblock_analysis'] = navigate_directories(start_path=".", multi_select=True, file_extension=".csv")
 
     return config
+
+def get_user_input_for_fss_plot(config):
+    """Update the configuration based on user input."""
+    # Prompt user for 'file_name_means' with a default value
+    file_name_means_input = input(f"Enter means file path (default: {config['paths']['file_name_means']}): ").strip()
+    config['paths']['file_name_means'] = file_name_means_input or config['paths']['file_name_means']
+
+    # Prompt user for 'file_name_vars' with a default value
+    file_name_vars_input = input(f"Enter variances file path (default: {config['paths']['file_name_vars']}): ").strip()
+    config['paths']['file_name_vars'] = file_name_vars_input or config['paths']['file_name_vars']
+
+    # Prompt user for 'plot_dir' with a default value
+    plot_dir_input = input(f"Enter plot directory path (default: {config['paths']['plot_dir']}): ").strip()
+    config['paths']['plot_dir'] = plot_dir_input or config['paths']['plot_dir']
+
+    # Prompt user for 'variables_to_plot' with default values
+    variables_to_plot_input = input(f"Enter variables to plot as comma-separated values (default: {','.join(config['settings']['variables_to_plot'])}): ").strip()
+    config['settings']['variables_to_plot'] = variables_to_plot_input.split(',') if variables_to_plot_input else config['settings']['variables_to_plot']
+
+    # Prompt user for 'variables_names_latex' with default values
+    variables_names_latex_input = input(f"Enter LaTeX names for variables as comma-separated values (default: {','.join(config['settings']['variables_names_latex'])}): ").strip()
+    config['settings']['variables_names_latex'] = variables_names_latex_input.split(',') if variables_names_latex_input else config['settings']['variables_names_latex']
+
+    return config
