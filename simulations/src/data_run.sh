@@ -53,13 +53,11 @@ for lattice_side in "${lattice_side_values[@]}"; do
     beta_up=$(echo "scale=$scale; $beta_c + $scaled_beta / (e(l($lattice_side) / $nu))" | bc -l)
     delta_beta=$(echo "scale=$scale; ($beta_up - $beta_down) / $number_betas" | bc -l)
     beta_values=()
-    echo ${beta_values[@]}
     for i in $(seq 0 $num_beta); do
         beta=$(echo "scale=$scale; $beta_down + $i * $delta_beta" | bc -l)
         beta_values+=($beta)
     done
-    echo $lattice_side
-    echo "${beta_values[@]}"
+    echo -e "Lattice $lattice_side betas:\n${beta_values[@]}"
     for beta in "${beta_values[@]}"; do
         # Define filenames within their respective folders
         input_file="inputs/lattice${lattice_side}/input_b${beta}_L${lattice_side}.in"
