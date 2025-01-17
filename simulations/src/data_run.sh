@@ -4,8 +4,9 @@
 export LC_NUMERIC=C
 scale=5 #scale for numerical precision
 nu=0.6717
-beta_c=0.4542
-scaled_beta=0.6
+beta_c=0.453
+scaled_beta=0.3
+num_beta=63
 
 # Check if both arguments are provided
 if [[ $# -ne 2 ]]; then
@@ -28,10 +29,10 @@ proc_count=0
 
 # Parameters for the simulations
 sample_size=20000000 # number of total sweeps for each lattice
-printing_step=80 # complete lattice iterations between means computing (sampling)
+printing_step=400 # complete lattice iterations between means computing (sampling)
 alpha=1.0 # amplitude of the angle for Metropolis step
 epsilon=0.1 # percentage of Metropolis w.r.t. Microcanonical 
-number_betas=15
+number_betas=63
 
 # Check and remove directories if they exist
 [[ -d inputs ]] && rm -r inputs
@@ -52,11 +53,13 @@ for lattice_side in "${lattice_side_values[@]}"; do
     beta_up=$(echo "scale=$scale; $beta_c + $scaled_beta / (e(l($lattice_side) / $nu))" | bc -l)
     delta_beta=$(echo "scale=$scale; ($beta_up - $beta_down) / $number_betas" | bc -l)
     beta_values=()
-    for i in $(seq 0 15); do
+    echo ${beta_values[@]}
+    for i in $(seq 0 $num_beta); do
         beta=$(echo "scale=$scale; $beta_down + $i * $delta_beta" | bc -l)
         beta_values+=($beta)
     done
-    echo "${beta_values[@]}"   
+    echo $lattice_side
+    echo "${beta_values[@]}"
     for beta in "${beta_values[@]}"; do
         # Define filenames within their respective folders
         input_file="inputs/lattice${lattice_side}/input_b${beta}_L${lattice_side}.in"
