@@ -3,10 +3,9 @@
 # Set locale for correct numeric formatting
 export LC_NUMERIC=C
 scale=5 #scale for numerical precision
-nu=0.6717
 beta_c=0.453
-scaled_beta=0.3
-num_beta=63
+scaled_beta=40
+number_betas=63
 
 # Check if both arguments are provided
 if [[ $# -ne 2 ]]; then
@@ -32,7 +31,6 @@ sample_size=20000000 # number of total sweeps for each lattice
 printing_step=400 # complete lattice iterations between means computing (sampling)
 alpha=1.0 # amplitude of the angle for Metropolis step
 epsilon=0.1 # percentage of Metropolis w.r.t. Microcanonical 
-number_betas=63
 
 # Check and remove directories if they exist
 [[ -d inputs ]] && rm -r inputs
@@ -49,11 +47,11 @@ done
 # Loop over each combination of beta, alpha, and lattice_side
 for lattice_side in "${lattice_side_values[@]}"; do
     # Creation of a custom beta array for the current lattice
-    beta_down=$(echo "scale=$scale; $beta_c - $scaled_beta / (e(l($lattice_side) / $nu))" | bc -l)
-    beta_up=$(echo "scale=$scale; $beta_c + $scaled_beta / (e(l($lattice_side) / $nu))" | bc -l)
+    beta_down=$(echo "scale=$scale; $beta_c - $scaled_beta / e(l($lattice_side) * 3.0)" | bc -l)
+    beta_up=$(echo "scale=$scale; $beta_c + $scaled_beta / e(l($lattice_side) * 3.0)" | bc -l)
     delta_beta=$(echo "scale=$scale; ($beta_up - $beta_down) / $number_betas" | bc -l)
     beta_values=()
-    for i in $(seq 0 $num_beta); do
+    for i in $(seq 0 $number_betas); do
         beta=$(echo "scale=$scale; $beta_down + $i * $delta_beta" | bc -l)
         beta_values+=($beta)
     done
