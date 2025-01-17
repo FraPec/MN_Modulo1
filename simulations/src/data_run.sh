@@ -19,7 +19,7 @@ executable="$1"
 num_procs="$2"
 
 # Sequence for lattice_side
-lattice_side_values=(30) #27 24 21 18 15 12 9)
+lattice_side_values=(30 27 24 21 18 15 12 9)
 # Sequence for beta values
 echo -e "chosen lattices: ${lattice_side_values[*]}"
 
