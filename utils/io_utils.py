@@ -353,7 +353,7 @@ def save_lattice_metrics_to_csv(output_dir, lattice_side, beta, metrics):
     ensure_directory(lattice_dir)
 
     # Construct output file name
-    output_file = os.path.join(lattice_dir, f"data_L{lattice_side}_b{beta:.3f}_summary.csv")
+    output_file = os.path.join(lattice_dir, f"data_L{lattice_side}_b{beta:.5f}_summary.csv")
 
     # Add L and beta to each row
     num_rows = len(metrics["mx"])  # Assumes all metrics have the same length
