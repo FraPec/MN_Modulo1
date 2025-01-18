@@ -100,9 +100,9 @@ def chi_prime_var_jk(m, m_squared, beta, L, D):
     """
     m_jk = jackknife_means_generation(m)
     m_squared_jk = jackknife_means_generation(m_squared)
-    var_m = m_squared_jk - m_jk**2 
+    chi_prime = (m_squared_jk - m_jk**2) * beta * L**D
     
-    chi_prime_var = np.var(var_m, ddof=1) * (len(var_m) - 1) * beta * L**D 
+    chi_prime_var = np.var(chi_prime, ddof=1) * (len(chi_prime) - 1) 
     return chi_prime_var
 
 def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, num_cores, max_block_size):

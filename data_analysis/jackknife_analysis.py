@@ -36,7 +36,7 @@ if __name__ == "__main__":
  
         # Perform the Jackknife blocking analysis if confirmed by the user
         if prompt_user_choice(f"Do you want to perform jackknife + blocking for all blocksizes less than {config['settings']['max_block_size_default']}?"):
-            perform_jackknife_blocking_analysis(config['paths']['default_files_4_maxblock_analysis'], config['paths']['output_dir'], 
+            perform_jackknife_blocking_analysis(config['paths']['default_files_4_maxblock_analysis'], config['paths']['output_dir'],
                                        config['settings']['first_index'], config['settings']['num_cores_default'], 
                                        config['settings']['max_block_size_default'])
 
