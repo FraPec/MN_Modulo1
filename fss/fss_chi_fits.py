@@ -33,9 +33,10 @@ def fit_chi_prime(beta, chi_prime, dchi_prime, beta_interval=[0, 1e8], starting_
     
     beta_v = np.linspace(min(beta_fit), max(beta_fit), 100)
     plt.plot(beta_v, chi_prime_f(beta_v, *popt))
-    plt.scatter(beta_fit, chi_prime_fit)
+    plt.errorbar(beta_fit, chi_prime_fit, yerr=dchi_prime_fit, marker='.', linestyle='')
+    logging.info(f"Chi/ndof = {chisq}/{len(chi_prime_fit)}")
     plt.show()
-    print(chisq)
+    
     return 
 
 if __name__ == '__main__':
@@ -56,11 +57,11 @@ if __name__ == '__main__':
         df_means = pd.read_csv(config["paths"]["file_name_means"])
         df_vars = pd.read_csv(config["paths"]["file_name_vars"])
         
-        i = -1
+        i = 0
         beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, df_vars, "chi_prime")
         logging.info(f"Current L {L_list[i]}")
-        starting_params = [-2e6, 0.4525, 38]
-        fit_chi_prime(beta_list[i], means_data_set_list[i], std_devs_data_set_list[i], beta_interval=[0.449, 0.456], starting_params=starting_params)
+        starting_params = [-1.6e6, 0.4527, 37.8]
+        fit_chi_prime(beta_list[i], means_data_set_list[i], std_devs_data_set_list[i], beta_interval=[0.4415, 0.4568], starting_params=starting_params)
     except Exception as main_e:
         # Log any unexpected errors
         logging.critical(f"Unexpected error in main script: {main_e}", exc_info=True)
