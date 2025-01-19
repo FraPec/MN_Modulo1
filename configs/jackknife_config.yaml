@@ -14,4 +14,4 @@ paths:
   default_files_4_singleblock_analysis: 
     - "../data/lattice_metrics_csv/L9/data_L9_b0.453_summary.csv"
     - "../data/lattice_metrics_csv/L30/data_L30_b0.453_summary.csv"
-  secondary_variables_dir: "../secondary_quantities"
+  secondary_variables_dir: "../secondary_quantities_around_bc"
