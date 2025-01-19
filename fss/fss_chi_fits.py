@@ -7,7 +7,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/')))
-from io_utils import setup_logging, load_config, prompt_user_choice
+from io_utils import setup_logging, load_config, prompt_user_choice, ensure_directory
 from fss_utils import prepare_dataset_fss_plot
 from interface_utils import navigate_directories
 
@@ -19,12 +19,19 @@ def update_config_file_paths(config):
     file_name_vars_input = input(f"Enter variances file path (default: {config['paths']['file_name_vars']}): ").strip()
     config['paths']['file_name_vars'] = file_name_vars_input or config['paths']['file_name_vars']
 
+    fss_fit_results_input = input(f"Enter fit results file path (default: {config['paths']['file_name_fit_results']}): ").strip()
+    config['paths']['file_name_fit_results'] = fss_fit_results_input or config['paths']['file_name_fit_results']
+
+    # Prompt user for 'plot_dir' with a default value
+    plot_dir_input = input(f"Enter plot directory path (default: {config['paths']['plot_dir']}): ").strip()
+    config['paths']['plot_dir'] = plot_dir_input or config['paths']['plot_dir']
+   
     return config
 
 def chi_prime_f(beta, alpha, beta_pc, chi_prime_max):
     return alpha * (beta - beta_pc)**2 + chi_prime_max
 
-def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None):
+def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None, filename=None):
     beta_v = np.linspace(min(beta_fit), max(beta_fit), 100)
     plt.figure(figsize=(16, 9))
     plt.plot(beta_v, chi_prime_f(beta_v, *popt), label=r"Fit")
@@ -38,6 +45,8 @@ def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None):
         plt.title(title, fontsize=20)
     plt.legend(fontsize=20)
     plt.tight_layout()
+    if filename:
+        plt.savefig(filename, dpi=300)
     plt.show()
 
 def fit_chi_prime(beta, chi_prime, dchi_prime, starting_params=None):
@@ -81,6 +90,16 @@ if __name__ == '__main__':
         beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, df_vars, "chi_prime")
         logging.info(f"Current L list:\n{L_list}")
 
+        alpha_list = []
+        beta_pc_list = []
+        chi_prim_max_list = []
+        dalpha_list = []
+        dbeta_pc_list = []
+        dchi_prim_max_list = []
+        chi2_list = [] 
+        ndof_list = []
+        chi2_over_ndof = []
+
         for i in range(len(L_list)):
             logging.info(f"Current L: {L_list[i]}")
             
@@ -111,18 +130,45 @@ if __name__ == '__main__':
                 logging.info(f"Optimal parameters: alpha = {popt[0]} +- {std_devs[0]}, beta_pc = {popt[1]} +- {std_devs[1]}, chi_prime_max = {popt[2]} +- {std_devs[2]}")
                 logging.info(f"Chi-squared/ndof: {chisq:.1f}/{ndof}")
                 corr_mat = np.zeros(pcov.shape)
-                for i in range(pcov.shape[0]):
-                    for j in range(pcov.shape[0]):
-                        corr_mat[i, j] = pcov[i, j] / (std_devs[i] * std_devs[j])
+                for k in range(pcov.shape[0]):
+                    for l in range(pcov.shape[0]):
+                        corr_mat[k, l] = pcov[k, l] / (std_devs[k] * std_devs[l])
                 logging.info(f"Correlation matrix:\n{corr_mat}")
-                plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=f"lattice side {L_list[i]}")
                 
+                ensure_directory(config["paths"]["plot_dir"])
+                filepath = os.path.join(config["paths"]["plot_dir"], f"chi_vs_beta_L{L_list[i]}.png")
+                plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=f"lattice side {L_list[i]}", filename=filepath)
+
                 if prompt_user_choice("Do you want to fit again, changing beta interval?"):
                     beta_intervals[i] = get_new_beta_interval()
                 else:
-                    
+                    alpha_list.append(popt[0])
+                    beta_pc_list.append(popt[1])
+                    chi_prim_max_list.append(popt[2])
+                    dalpha_list.append(std_devs[0])
+                    dbeta_pc_list.append(std_devs[1])
+                    dchi_prim_max_list.append(std_devs[2])
+                    chi2_list.append(chisq) 
+                    ndof_list.append(ndof)
+                    chi2_over_ndof.append(chisq/ndof)
                     break
-                
+        
+        # Save results to a DataFrame
+        results_df = pd.DataFrame({
+            'L': L_list,
+            'beta_pc': beta_pc_list,
+            'sigma_beta_pc': dbeta_pc_list,
+            'max_chi_prime': chi_prim_max_list,
+            'sigma_max_chi_prime': dchi_prim_max_list,
+            'alpha': alpha_list,
+            'sigma_alpha': dalpha_list,
+            'chi2': chi2_list,
+            'ndof': ndof_list,
+            'chi2_over_ndof': chi2_over_ndof
+        })
+        
+        # Save DataFrame to CSV
+        results_df.to_csv(config['paths']['file_name_fit_results'], index=False)
     
     except Exception as main_e:
         logging.critical(f"Unexpected error in main script: {main_e}", exc_info=True)
