@@ -368,3 +368,42 @@ def save_lattice_metrics_to_csv(output_dir, lattice_side, beta, metrics):
     df.to_csv(output_file, index=False)
     print(f"[INFO] Saved CSV file: {output_file}")
     
+    
+    
+def load_csv(file_path):
+    """
+    Load a CSV file into a pandas DataFrame.
+
+    Parameters:
+        file_path (str): Path to the CSV file.
+
+    Returns:
+        pd.DataFrame: Loaded data.
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"CSV file not found: {file_path}")
+    return pd.read_csv(file_path)
+
+
+def save_csv(dataframe, file_path):
+    """
+    Save a pandas DataFrame to a CSV file.
+
+    Parameters:
+        dataframe (pd.DataFrame): Data to save.
+        file_path (str): Path for the CSV file.
+
+    Returns:
+        None
+    """
+    dataframe.to_csv(file_path, index=False)
+    logging.info(f"Data saved to {file_path}")
+    
+    
+    
+    
+    
+    
+    
+    
+    
