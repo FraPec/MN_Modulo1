@@ -574,3 +574,29 @@ def get_user_input_for_fss_plot(config):
     config['settings']['variables_names_latex'] = variables_names_latex_input.split(',') if variables_names_latex_input else config['settings']['variables_names_latex']
 
     return config
+
+
+def get_user_input_for_chi_prime_fit(config):
+    """
+    Updates the file paths in the configuration dictionary based on user input.
+    
+    Args:
+        config (dict): The configuration dictionary containing file paths.
+        
+    Returns:
+        dict: Updated configuration dictionary with new file paths.
+    """
+    file_name_means_input = input(f"Enter means file path (default: {config['paths']['file_name_means']}): ").strip()
+    config['paths']['file_name_means'] = file_name_means_input or config['paths']['file_name_means']
+
+    file_name_vars_input = input(f"Enter variances file path (default: {config['paths']['file_name_vars']}): ").strip()
+    config['paths']['file_name_vars'] = file_name_vars_input or config['paths']['file_name_vars']
+
+    fss_fit_results_input = input(f"Enter fit results file path (default: {config['paths']['file_name_fit_results']}): ").strip()
+    config['paths']['file_name_fit_results'] = fss_fit_results_input or config['paths']['file_name_fit_results']
+
+    # Prompt user for 'plot_dir' with a default value
+    plot_dir_input = input(f"Enter plot directory path (default: {config['paths']['plot_dir']}): ").strip()
+    config['paths']['plot_dir'] = plot_dir_input or config['paths']['plot_dir']
+   
+    return config

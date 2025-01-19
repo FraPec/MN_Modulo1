@@ -3,104 +3,13 @@ import os
 import logging
 import numpy as np
 import pandas as pd
-from scipy.optimize import curve_fit
-import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/')))
 from io_utils import setup_logging, load_config, prompt_user_choice, ensure_directory
-from fss_utils import prepare_dataset_fss_plot, chi_prime_f
-from interface_utils import navigate_directories
+from fss_utils import prepare_dataset_fss_plot, chi_prime_f, fit_chi_prime, create_starting_params, get_new_beta_interval
+from interface_utils import get_user_input_for_chi_prime_fit
 from plot_utils import plot_fit_results
 
-def get_user_input_for_chi_prime_fit(config):
-    """
-    Updates the file paths in the configuration dictionary based on user input.
-    
-    Args:
-        config (dict): The configuration dictionary containing file paths.
-        
-    Returns:
-        dict: Updated configuration dictionary with new file paths.
-    """
-    file_name_means_input = input(f"Enter means file path (default: {config['paths']['file_name_means']}): ").strip()
-    config['paths']['file_name_means'] = file_name_means_input or config['paths']['file_name_means']
-
-    file_name_vars_input = input(f"Enter variances file path (default: {config['paths']['file_name_vars']}): ").strip()
-    config['paths']['file_name_vars'] = file_name_vars_input or config['paths']['file_name_vars']
-
-    fss_fit_results_input = input(f"Enter fit results file path (default: {config['paths']['file_name_fit_results']}): ").strip()
-    config['paths']['file_name_fit_results'] = fss_fit_results_input or config['paths']['file_name_fit_results']
-
-    # Prompt user for 'plot_dir' with a default value
-    plot_dir_input = input(f"Enter plot directory path (default: {config['paths']['plot_dir']}): ").strip()
-    config['paths']['plot_dir'] = plot_dir_input or config['paths']['plot_dir']
-   
-    return config
-
-
-
-def fit_chi_prime(beta, chi_prime, dchi_prime, starting_params=None):
-    """
-    Fits the chi prime data using curve fitting.
-    
-    Args:
-        beta (np.ndarray): Beta values.
-        chi_prime (np.ndarray): Chi prime values.
-        dchi_prime (np.ndarray): Standard deviations of chi prime.
-        starting_params (list, optional): Initial parameters for the fit.
-        
-    Returns:
-        tuple: Optimal parameters, covariance matrix, standard deviations,
-               chi-squared value, and degrees of freedom.
-    """
-    popt, pcov = curve_fit(chi_prime_f, beta, chi_prime, p0=starting_params, sigma=dchi_prime, absolute_sigma=True)
-    std_devs = np.sqrt(np.diag(pcov))
-    res_sq = (chi_prime_f(beta, *popt) - chi_prime) ** 2
-    chisq = np.sum(res_sq / dchi_prime ** 2)
-    ndof = len(beta) - len(popt)
-    return popt, pcov, std_devs, chisq, ndof
-
-def create_starting_params(beta, chi):
-    """
-    Creates starting parameters for fitting based on initial data.
-    
-    Args:
-        beta (np.ndarray): Beta values.
-        chi (np.ndarray): Chi values.
-        
-    Returns:
-        tuple: Initial parameters alpha, beta_c, and chi_max.
-    """
-    chi_max = np.max(chi)
-    beta_c = beta[np.argmax(chi)]
-    alpha = (chi[0] - chi_max) / (beta[0] - beta_c)**2
-    return alpha, beta_c, chi_max
-
-def print_and_confirm_config(config):
-    """
-    Prints the configuration and prompts user for confirmation.
-    
-    Args:
-        config (dict): Configuration dictionary.
-        
-    Returns:
-        bool: True if the configuration is confirmed, False otherwise.
-    """
-    print("Loaded configuration:")
-    for key, value in config.items():
-        print(f"{key}: {value}")
-    return prompt_user_choice("Is the configuration correct?")
-
-def get_new_beta_interval():
-    """
-    Prompts the user to enter a new beta interval.
-    
-    Returns:
-        tuple: New minimum and maximum beta values.
-    """
-    beta_min = input("Enter new minimum beta value (press Enter to keep current minimum): ").strip()
-    beta_max = input("Enter new maximum beta value (press Enter to keep current maximum): ").strip()
-    return float(beta_min) if beta_min else None, float(beta_max) if beta_max else None
 
 if __name__ == '__main__':
     setup_logging(log_dir="../logs/", log_file="fss_fit.log")
@@ -108,7 +17,10 @@ if __name__ == '__main__':
     try:
         config = load_config("../configs/fss.yaml")
         
-        if not print_and_confirm_config(config):
+        logging.info("Loaded configuration:")
+        for key, value in config.items():
+            logging.info(f"{key}: {value}")
+        if not prompt_user_choice("Is the configuration correct?"):
             config = get_user_input_for_chi_prime_fit(config)
 
         df_means = pd.read_csv(config["paths"]["file_name_means"])
