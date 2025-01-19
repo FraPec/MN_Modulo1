@@ -32,3 +32,17 @@ def prepare_dataset_fss_plot(df_means, df_vars, variable_name):
     return beta_list, means_data_set_list, std_devs_data_set_list, L_list
 
 
+def chi_prime_f(beta, alpha, beta_pc, chi_prime_max):
+    """
+    Functional form of chi prime for fitting purposes.
+    
+    Args:
+        beta (float or np.ndarray): The independent variable, beta.
+        alpha (float): Parameter controlling the curvature.
+        beta_pc (float): Critical beta value.
+        chi_prime_max (float): Maximum value of chi prime.
+        
+    Returns:
+        float or np.ndarray: Calculated chi prime values.
+    """
+    return alpha * (beta - beta_pc)**2 + chi_prime_max

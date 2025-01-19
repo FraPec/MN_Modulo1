@@ -8,8 +8,9 @@ import matplotlib.pyplot as plt
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../utils/')))
 from io_utils import setup_logging, load_config, prompt_user_choice, ensure_directory
-from fss_utils import prepare_dataset_fss_plot
+from fss_utils import prepare_dataset_fss_plot, chi_prime_f
 from interface_utils import navigate_directories
+from plot_utils import plot_fit_results
 
 def get_user_input_for_chi_prime_fit(config):
     """
@@ -36,38 +37,7 @@ def get_user_input_for_chi_prime_fit(config):
    
     return config
 
-def chi_prime_f(beta, alpha, beta_pc, chi_prime_max):
-    return alpha * (beta - beta_pc)**2 + chi_prime_max
 
-def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None, filename=None):
-    """
-    Plots the fit results of chi prime against beta.
-    
-    Args:
-        beta_fit (np.ndarray): Fitted beta values.
-        chi_prime_fit (np.ndarray): Fitted chi prime values.
-        dchi_prime_fit (np.ndarray): Standard deviations of chi prime values.
-        popt (list): Optimal parameters from the fitting.
-        title (str, optional): Title of the plot.
-        filename (str, optional): Path to save the plot image.
-        
-    """
-    beta_v = np.linspace(min(beta_fit), max(beta_fit), 100)
-    plt.figure(figsize=(16, 9))
-    plt.plot(beta_v, chi_prime_f(beta_v, *popt), label=r"Fit")
-    plt.errorbar(beta_fit, chi_prime_fit, yerr=dchi_prime_fit, marker='.', linestyle='', label='Data')
-    plt.grid()
-    plt.xlabel(r"$\beta$", fontsize=20)
-    plt.ylabel(r"$\chi$", fontsize=20)
-    plt.xticks(fontsize=15)
-    plt.yticks(fontsize=15)
-    if title:
-        plt.title(title, fontsize=20)
-    plt.legend(fontsize=20)
-    plt.tight_layout()
-    if filename:
-        plt.savefig(filename, dpi=300)
-    plt.show()
 
 def fit_chi_prime(beta, chi_prime, dchi_prime, starting_params=None):
     """

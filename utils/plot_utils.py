@@ -2,7 +2,7 @@ import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
-
+from fss_utils import chi_prime_f
 
 def truncate_at_first_negative(data):
     """
@@ -230,3 +230,33 @@ def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, mar
         plt.savefig(save_path, dpi=300)
     plt.close()
 
+
+def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None, filename=None):
+    """
+    Plots the fit results of chi prime against beta.
+    
+    Args:
+        beta_fit (np.ndarray): Fitted beta values.
+        chi_prime_fit (np.ndarray): Fitted chi prime values.
+        dchi_prime_fit (np.ndarray): Standard deviations of chi prime values.
+        popt (list): Optimal parameters from the fitting.
+        title (str, optional): Title of the plot.
+        filename (str, optional): Path to save the plot image.
+        
+    """
+    beta_v = np.linspace(min(beta_fit), max(beta_fit), 100)
+    plt.figure(figsize=(16, 9))
+    plt.plot(beta_v, chi_prime_f(beta_v, *popt), label=r"Fit")
+    plt.errorbar(beta_fit, chi_prime_fit, yerr=dchi_prime_fit, marker='.', linestyle='', label='Data')
+    plt.grid()
+    plt.xlabel(r"$\beta$", fontsize=20)
+    plt.ylabel(r"$\chi$", fontsize=20)
+    plt.xticks(fontsize=15)
+    plt.yticks(fontsize=15)
+    if title:
+        plt.title(title, fontsize=20)
+    plt.legend(fontsize=20)
+    plt.tight_layout()
+    if filename:
+        plt.savefig(filename, dpi=300)
+    plt.show()
