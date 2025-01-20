@@ -1,5 +1,6 @@
-import matplotlib
+import os
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from fss_utils import chi_prime_f
@@ -233,6 +234,40 @@ def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=
         plt.savefig(save_path, dpi=300)
     plt.close()
 
+def plot_without_fits(data, results, beta_pc_fit_function, chi_max_fit_function, output_dir):
+    """
+    Function to plot scatterplots for beta_pc and chi_max without fit curves.
+    The chi_max plot is in log-log scale.
+    """
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # Scatterplot for beta_pc(L)
+    plt.figure(figsize=(6, 6))
+    plt.errorbar(data['L'], data['beta_pc'], yerr=data['sigma_beta_pc'], fmt='o', label='Data', capsize=5)
+    plt.xlabel("$L$")
+    plt.ylabel("$\\beta_{pc}$")
+    plt.title("Scatterplot of $\\beta_{pc}$ vs $L$")
+    plt.grid()
+    output_beta_pc_path = os.path.join(output_dir, "scatter_beta_pc.png")
+    plt.savefig(output_beta_pc_path, dpi = 300)
+    plt.close()
+    print(f"[INFO] Scatterplot saved to {output_beta_pc_path}")
+    
+    # Scatterplot for chi_max(L) in log-log scale
+    plt.figure(figsize=(6, 6))
+    plt.scatter(data['L'], data['max_chi_prime'], marker='o', label='Data')
+    plt.xscale("log")
+    plt.yscale("log")
+    plt.xlabel("$L$")
+    plt.ylabel("$\\chi_{\\text{max}}'$")
+    plt.title("Scatterplot of $\\chi_{\\text{max}}'$ vs $L$")
+    plt.grid(which="both", linestyle="--", linewidth=0.5)
+    output_chi_max_path = os.path.join(output_dir, "scatter_chi_max_log_log.png")
+    plt.savefig(output_chi_max_path, dpi = 300)
+    plt.close()
+    print(f"[INFO] Scatterplot saved to {output_chi_max_path}")
+
 
 def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None, filename=None):
     """
@@ -263,3 +298,86 @@ def plot_fit_results(beta_fit, chi_prime_fit, dchi_prime_fit, popt, title=None, 
     if filename:
         plt.savefig(filename, dpi=300)
     plt.show()
+
+    
+def plot_critical_exponents(data, output_dir):
+    """
+    Plots critical exponents (beta_c, 1/nu, gamma/nu, nu, gamma) vs L_min.
+    """
+    # Ensure the output directory exists
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Plot beta_c vs L_min
+    plt.figure(figsize=(8, 6))
+    plt.errorbar(data['L_min'], data['beta_c'], yerr=data['beta_c_err'], fmt='o', label=r"$\beta_c$", capsize=5)
+    plt.axhline(y=data['beta_c'].mean(), color='r', linestyle='-', label='Mean')
+    plt.axhline(y=data['beta_c'].mean() + data['beta_c'].std(), color='r', linestyle='--', label='Mean $\pm$ Std')
+    plt.axhline(y=data['beta_c'].mean() - data['beta_c'].std(), color='r', linestyle='--')
+    plt.xlabel(r"$L_{\mathrm{min}}$")
+    plt.ylabel(r"$\beta_c$")
+    plt.title(r"$\beta_c$ vs $L_{\mathrm{min}}$")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(output_dir, 'beta_c_vs_Lmin.png'))
+    plt.close()
+
+    # Plot 1/nu vs L_min
+    plt.figure(figsize=(8, 6))
+    plt.errorbar(data['L_min'], data['1_over_nu'], yerr=data['1_over_nu_err'], fmt='o', label=r"$1/\nu$", capsize=5)
+    plt.axhline(y=data['1_over_nu'].mean(), color='r', linestyle='-', label='Mean')
+    plt.axhline(y=data['1_over_nu'].mean() + data['1_over_nu'].std(), color='r', linestyle='--', label='Mean $\pm$ Std')
+    plt.axhline(y=data['1_over_nu'].mean() - data['1_over_nu'].std(), color='r', linestyle='--')
+    plt.xlabel(r"$L_{\mathrm{min}}$")
+    plt.ylabel(r"$1/\nu$")
+    plt.title(r"$1/\nu$ vs $L_{\mathrm{min}}$")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(output_dir, '1_over_nu_vs_Lmin.png'))
+    plt.close()
+
+    # Plot gamma/nu vs L_min
+    plt.figure(figsize=(8, 6))
+    plt.errorbar(data['L_min'], data['gamma_over_nu'], yerr=data['gamma_over_nu_err'], fmt='o', label=r"$\gamma/\nu$", capsize=5)
+    plt.axhline(y=data['gamma_over_nu'].mean(), color='r', linestyle='-', label='Mean')
+    plt.axhline(y=data['gamma_over_nu'].mean() + data['gamma_over_nu'].std(), color='r', linestyle='--', label='Mean $\pm$ Std')
+    plt.axhline(y=data['gamma_over_nu'].mean() - data['gamma_over_nu'].std(), color='r', linestyle='--')
+    plt.xlabel(r"$L_{\mathrm{min}}$")
+    plt.ylabel(r"$\gamma/\nu$")
+    plt.title(r"$\gamma/\nu$ vs $L_{\mathrm{min}}$")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(output_dir, 'gamma_over_nu_vs_Lmin.png'))
+    plt.close()
+
+    # Plot nu vs L_min
+    plt.figure(figsize=(8, 6))
+    plt.errorbar(data['L_min'], data['nu'], yerr=data['nu_err'], fmt='o', label=r"$\nu$", capsize=5)
+    plt.axhline(y=data['nu'].mean(), color='r', linestyle='-', label='Mean')
+    plt.axhline(y=data['nu'].mean() + data['nu'].std(), color='r', linestyle='--', label='Mean $\pm$ Std')
+    plt.axhline(y=data['nu'].mean() - data['nu'].std(), color='r', linestyle='--')
+    plt.xlabel(r"$L_{\mathrm{min}}$")
+    plt.ylabel(r"$\nu$")
+    plt.title(r"$\nu$ vs $L_{\mathrm{min}}$")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(output_dir, 'nu_vs_Lmin.png'))
+    plt.close()
+
+    # Plot gamma vs L_min
+    plt.figure(figsize=(8, 6))
+    plt.errorbar(data['L_min'], data['gamma'], yerr=data['gamma_err'], fmt='o', label=r"$\gamma$", capsize=5)
+    plt.axhline(y=data['gamma'].mean(), color='r', linestyle='-', label='Mean')
+    plt.axhline(y=data['gamma'].mean() + data['gamma'].std(), color='r', linestyle='--', label='Mean $\pm$ Std')
+    plt.axhline(y=data['gamma'].mean() - data['gamma'].std(), color='r', linestyle='--')
+    plt.xlabel(r"$L_{\mathrm{min}}$")
+    plt.ylabel(r"$\gamma$")
+    plt.title(r"$\gamma$ vs $L_{\mathrm{min}}$")
+    plt.legend()
+    plt.grid()
+    plt.savefig(os.path.join(output_dir, 'gamma_vs_Lmin.png'))
+    plt.close()
+
+    print(f"[INFO] All plots saved in {output_dir}")    
+    
+    
+    

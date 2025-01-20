@@ -2,7 +2,24 @@ import os
 import logging
 from io_utils import load_config, ensure_directory
 
+def get_file_path(prompt, default=None):
+    """
+    Prompt the user for a file path or use the default.
 
+    Parameters:
+        prompt (str): Description of the file being requested.
+        default (str): Default file path if none is provided.
+
+    Returns:
+        str: File path selected by the user.
+    """
+    path = input(f"{prompt} [default: {default}]: ").strip() or default
+    if not os.path.exists(path):
+        print(f"[ERROR] Path does not exist: {path}")
+        return get_file_path(prompt, default)
+    return path
+    
+      
 
 def navigate_directories(start_path=".", multi_select=False, file_extension=".bin"):
     """
