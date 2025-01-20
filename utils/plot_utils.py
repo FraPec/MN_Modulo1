@@ -190,37 +190,40 @@ def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=Non
     # Save the plot
     plt.savefig(save_path, dpi=300)
     plt.close()
-    
 
-def plot_fss_with_errors(x_values, y_values, errors, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$", save_path=False):
+
+def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$", save_path=False):
     """ 
-    Plots multiple datasets, one for each lattice_side, with error bars, distinct colors, and empty markers.
+    Plots multiple datasets, one for each lattice side, with error bars, distinct colors, and markers.
     
     Parameters:
         x_values (list of arrays): List of arrays where each array represents the x-values for a dataset.
         y_values (list of arrays): List of arrays where each array represents the y-values for a dataset.
-        errors (list of arrays): List of arrays where each array contains the errors for the corresponding y-values.
+        errors (list of arrays, optional): List of arrays where each array contains the errors for the corresponding y-values.
         lattice_side_list (list of int, optional): List of lattice side lengths for each dataset.
         marker (str): Marker style, 'o' for circular markers by default.
         cmap (str): Name of the colormap to use for generating distinct colors.
         xlabel (str): Label for the x-axis.
         ylabel (str): Label for the y-axis.
-    
+        save_path (str, optional): File path to save the plot. If False, the plot is not saved.
+        
     Returns:
         None
     """
     num_datasets = len(y_values)
-    colors = matplotlib.colormaps.get_cmap(cmap)(np.linspace(0, 1, num_datasets))  # Corrected line
-    
+    colors = plt.get_cmap(cmap)(np.linspace(0, 1, num_datasets))  # Corrected to use plt.get_cmap
+
     plt.figure(figsize=(10, 6))
-    for i, (x, y, y_err) in enumerate(zip(x_values, y_values, errors)):
-        if np.all(lattice_side_list):
-            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i],
-                         label=f'L {lattice_side_list[i]}')
+    for i, (x, y, y_err) in enumerate(zip(x_values, y_values, errors if errors is not None else [None]*num_datasets)):
+        if lattice_side_list is not None:
+            label = f'L {lattice_side_list[i]}'
+        if y_err is not None:
+            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i], label=label)
         else:
-            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i])
-    
-    plt.legend(fontsize=15)
+            plt.plot(x, y, marker=marker, linestyle='--', color=colors[i], label=label)
+
+    if lattice_side_list is not None:
+        plt.legend(fontsize=15)
     plt.xticks(fontsize=15)
     plt.yticks(fontsize=15)
     plt.xlabel(xlabel, fontsize=20)
