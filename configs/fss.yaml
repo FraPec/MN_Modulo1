@@ -3,8 +3,16 @@ paths:
   file_name_vars: "../secondary_quantities_around_bc/secondary_quantities_variances.csv"
   plot_dir: "../plots/fss_plots_around_bc"
   file_name_fit_results: "fss_fit_results.csv"
+  absm: "../principal_quantities_around_bc/principal_quantities_means.csv"
 
 settings:
   variables_to_plot: ["U", "chi_prime"]
   variables_names_latex: ["U", "$\\chi$'"]
   beta_min_max: [[0.4325, 0.459], [0.441, 0.4566], [0.446, 0.4554], [0.447, 0.4554], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
+  scaled_variables_to_plot: ["U", "chi_prime"] #, "absm"]
+  scaled_variables_names_latex: ["U", "$\\chi' / L^{\\gamma/\\nu}$"] #, "$<{|\\mathbf{m}|}>L^{\\beta/\\nu}$"]
+
+critical_values:
+  nu: 0.66184
+  gamma: 1.315
+  beta_c: 0.45426
