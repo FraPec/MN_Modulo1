@@ -1,9 +1,9 @@
 paths:
-  file_name_means: "../secondary_quantities_around_bc/secondary_quantities_means.csv"
-  file_name_vars: "../secondary_quantities_around_bc/secondary_quantities_variances.csv"
-  plot_dir: "../plots/fss_plots_around_bc"
+  file_name_means: "../secondary_quantities/secondary_quantities_means.csv"
+  file_name_vars: "../secondary_quantities/secondary_quantities_variances.csv"
+  plot_dir: "../plots/fss_plots"
   file_name_fit_results: "fss_fit_results.csv"
-  absm: "../principal_quantities_around_bc/principal_quantities_means.csv"
+  absm: "../principal_quantities/principal_quantities_means.csv"
 
 settings:
   variables_to_plot: ["U", "chi_prime"]
