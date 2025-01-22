@@ -2,7 +2,7 @@ paths:
   file_name_means: "../data/secondary_quantities/secondary_quantities_means.csv"
   file_name_vars: "../data/secondary_quantities/secondary_quantities_variances.csv"
   plot_dir: "../plots/fss_plots"
-  file_name_fit_results: "fss_fit_results.csv"
+  file_name_fit_results: "../data/finite_size_scaling_data/fss_fit_results.csv"
   absm: "../data/principal_quantities/principal_quantities_means.csv"
 
 settings:
