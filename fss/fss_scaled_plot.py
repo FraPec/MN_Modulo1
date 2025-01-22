@@ -42,8 +42,11 @@ if __name__ == '__main__':
         variables_names_latex = config["settings"]["scaled_variables_names_latex"]
         
         gamma, nu, beta_c = config["critical_values"]["gamma"], config["critical_values"]["nu"], config["critical_values"]["beta_c"]
-        
+        dim = 3
+        alpha = 2 - nu * dim
+
         df_means["chi_prime_mean"] = df_means["chi_prime_mean"].values / (df_means["L"].values)**(gamma/nu)
+        df_means["C_mean"] = df_means["C_mean"].values / (df_means["L"].values)**(alpha/nu)
         df_means["beta"] = (df_means["beta"].values - beta_c) * (df_means["L"].values)**(1/nu)    
         
         for variable, variable_latex in zip(variables_to_plot, variables_names_latex):
@@ -55,7 +58,6 @@ if __name__ == '__main__':
             plot_finite_size_scaling(beta_list, means_data_set_list, errors=None, lattice_side_list=L_list, 
                                      marker='.', cmap='tab10', xlabel=r"$(\beta - \beta_c) L^{1/\nu}$", ylabel=variable_latex, save_path=save_path)
         
-        dim = 3
         beta_exponent = (nu * dim - gamma) / 2
         df_means = pd.read_csv(config["paths"]["absm"])
         df_means["beta"] = (df_means["beta"].values - beta_c) * (df_means["L"].values)**(1/nu)
