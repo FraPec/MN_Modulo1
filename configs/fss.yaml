@@ -6,8 +6,8 @@ paths:
   absm: "../principal_quantities/principal_quantities_means.csv"
 
 settings:
-  variables_to_plot: ["U", "chi_prime"]
-  variables_names_latex: ["U", "$\\chi$'"]
+  variables_to_plot: ["U", "chi_prime", "C"]
+  variables_names_latex: ["U", "$\\chi$'", "C"]
   beta_min_max: [[0.4325, 0.459], [0.441, 0.4566], [0.446, 0.4554], [0.447, 0.4554], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0], [0.0, 1.0]]
   scaled_variables_to_plot: ["U", "chi_prime"] #, "absm"]
   scaled_variables_names_latex: ["U", "$\\chi' / L^{\\gamma/\\nu}$"] #, "$<{|\\mathbf{m}|}>L^{\\beta/\\nu}$"]

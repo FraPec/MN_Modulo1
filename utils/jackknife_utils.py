@@ -84,6 +84,25 @@ def binder_var_jk(m_squared, m_fourth):
     var_U = np.var(U, ddof=1) * (len(U) - 1) 
     return var_U
 
+def specific_heat_var_jk(epsilon, epsilon2, L, D):
+    """
+    Compute the variance for the specific heat, C = L^D * (<eps^2> - <eps>^2)
+
+    Parameters:
+        epsilon (numpy.ndarray): 1D array of the dataset
+        epsilon2 (numpy.ndarray): 1D array of the dataset to second power
+        L (int): lattice size
+        D (int): dimensionality
+    Returns:
+        var_C (float): variance of specific heat
+    """
+    eps_jk = jackknife_means_generation(epsilon)
+    eps2_jk = jackknife_means_generation(epsilon2)
+    C = L**D * (eps2_jk - eps_jk**2)
+    
+    C_var = np.var(C, ddof=1) * (len(C) - 1)
+    return C_var
+
 def chi_prime_var_jk(m, m_squared, beta, L, D):
     """
     Compute the variance for the Chi prime = beta * L^D * (<m^2> - <m>^2).
@@ -128,7 +147,7 @@ def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, nu
         None
     """
     D = 3
-    columns_to_process = ["L", "beta", "absm", "m2", "m4"]
+    columns_to_process = ["L", "beta", "absm", "m2", "m4", "epsilon"]
     df_list = []
     lattice_list = []
     beta_list = []
@@ -142,23 +161,30 @@ def perform_jackknife_blocking_analysis(input_paths, output_dir, first_index, nu
     total_files_to_process = len(df_list)
     processed_files = 1
     for L, beta, df in zip(lattice_list, beta_list, df_list):
-        absm, m2, m4 = df["absm"].values, df["m2"].values, df["m4"].values
+        absm, m2, m4, epsilon = df["absm"].values, df["m2"].values, df["m4"].values, df["epsilon"].values
+        epsilon2 = epsilon**2
+        
         block_sizes, absm_blocked = blocking_data_parallel(absm, max_block_size, num_cores=num_cores)
         m2_blocked = blocking_data_parallel(m2, max_block_size, num_cores=num_cores)[1]
         m4_blocked = blocking_data_parallel(m4, max_block_size, num_cores=num_cores)[1]
+        epsilon_blocked = blocking_data_parallel(epsilon, max_block_size, num_cores=num_cores)[1]
+        epsilon2_blocked = blocking_data_parallel(epsilon2, max_block_size, num_cores=num_cores)[1] 
 
+        var_C = []
         var_chi_prime = []
         var_U = []
-        for absm_blk, m2_blk, m4_blk in zip(absm_blocked, m2_blocked, m4_blocked):
+        for absm_blk, m2_blk, m4_blk, eps_blk, eps2_blk in zip(absm_blocked, m2_blocked, m4_blocked, epsilon_blocked, epsilon2_blocked):
             var_U.append(binder_var_jk(m2_blk, m4_blk))
             var_chi_prime.append(chi_prime_var_jk(absm_blk, m2_blk, beta, L, D))
+            var_C.append(specific_heat_var_jk(eps_blk, eps2_blk, L, D))
 
         output_df = pd.DataFrame({
             'block_size': block_sizes,
             'L': L,
             'beta': beta,
             'var_chi_prime': var_chi_prime,
-            'var_U': var_U
+            'var_U': var_U,
+            'var_C': var_C
         })
         
         subfolder = os.path.join(output_dir, f'L{L}')
@@ -191,7 +217,7 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         None
     """
     D = 3
-    columns_to_process = ["L", "beta", "absm", "m2", "m4"]
+    columns_to_process = ["L", "beta", "absm", "m2", "m4", "epsilon"]
     df_list = []
     lattice_list = []
     beta_list = []
@@ -200,6 +226,8 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
     var_chi_prime = []
     U_mean = []
     var_U = []
+    C_mean = []
+    var_C = []
 
     total_files_to_process = len(input_paths)
     processed_files = 1
@@ -212,16 +240,21 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         lattice_list.append(L)
         beta_list.append(beta)
    
-        absm, m2, m4 = df["absm"].values, df["m2"].values, df["m4"].values
-
+        absm, m2, m4, epsilon = df["absm"].values, df["m2"].values, df["m4"].values, df["epsilon"].values
+        epsilon2 = epsilon**2
+        
         absm_blocked = blocking_data(absm, block_size)
         m2_blocked = blocking_data(m2, block_size)
         m4_blocked = blocking_data(m4, block_size)
-        
+        epsilon_blocked = blocking_data(epsilon, block_size) 
+        epsilon2_blocked = blocking_data(epsilon2, block_size) 
+
         chi_prime_mean.append((np.mean(m2) - np.mean(absm)**2) * beta * L**D)
         var_chi_prime.append(chi_prime_var_jk(absm_blocked, m2_blocked, beta, L, D))
         U_mean.append(np.mean(m4) / np.mean(m2)**2)
         var_U.append(binder_var_jk(m2_blocked, m4_blocked))
+        C_mean.append((np.mean(epsilon2_blocked) - np.mean(epsilon_blocked)**2) * L**D)
+        var_C.append(specific_heat_var_jk(epsilon_blocked, epsilon2_blocked, L, D))
 
         logging.info(f"Loaded and processed lattice {L} with beta {beta}, {processed_files}/{total_files_to_process}.\n")
         processed_files += 1
@@ -231,7 +264,8 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         'L': lattice_list,
         'beta': beta_list,
         'var_chi_prime': var_chi_prime,
-        'var_U': var_U
+        'var_U': var_U,
+        'var_C': var_C
     })
 
     ensure_directory(output_dir)
@@ -242,7 +276,8 @@ def perform_jackknife_blocking(input_paths, output_dir, first_index, num_cores, 
         'L': lattice_list,
         'beta': beta_list,
         'chi_prime_mean': chi_prime_mean,
-        'U_mean': U_mean
+        'U_mean': U_mean,
+        'C_mean': C_mean
     })
 
     output_path = os.path.join(output_dir, f'secondary_quantities_means.csv')
@@ -265,4 +300,8 @@ def plot_jackknife_variances(df, plot_dir, base_name):
     save_path = os.path.join(plot_dir, f"{base_name}_var_chi_prime.png")
     plot_jackknife_blocking_variance(var_chi_prime, blocksizes, save_path, title=title, x_label="Block Size", y_label=r"$var(\chi')$")
 
+    # Plot for variance of specific heat
+    var_C = df["var_C"]
+    save_path = os.path.join(plot_dir, f"{base_name}_var_C.png")
+    plot_jackknife_blocking_variance(var_C, blocksizes, save_path, title=title, x_label="Block Size", y_label=r"$var(C)$")
 
