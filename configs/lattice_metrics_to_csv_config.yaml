@@ -6,4 +6,4 @@ paths:
   output_dir: ../data/lattice_metrics_csv/  # Directory for CSV outputs
   
 settings:
-  index_threshold : '250' #Value setted after performing the mcmc termalization analysis
+  index_threshold : '25' #Value setted after performing the mcmc termalization analysis
