@@ -58,17 +58,23 @@ if __name__ == '__main__':
             plot_finite_size_scaling(beta_list, means_data_set_list, errors=None, lattice_side_list=L_list, 
                                      marker='.', cmap='tab10', xlabel=r"$(\beta - \beta_c) L^{1/\nu}$", ylabel=variable_latex, save_path=save_path)
         
-        beta_exponent = (nu * dim - gamma) / 2
         df_means = pd.read_csv(config["paths"]["absm"])
-        df_means["beta"] = (df_means["beta"].values - beta_c) * (df_means["L"].values)**(1/nu)
+        beta_exponent = (nu * dim - gamma) / 2
+
+        df_means["m2_mean"] = df_means["m2_mean"].values * df_means["beta"].values * df_means["L"].values**dim / (df_means["L"].values)**(gamma/nu)
         df_means["absm_mean"] = df_means["absm_mean"].values * (df_means["L"].values)**(beta_exponent/nu)
-        
+        df_means["beta"] = (df_means["beta"].values - beta_c) * (df_means["L"].values)**(1/nu)
         save_path = os.path.join(plot_dir, f"absm_vs_beta_different_L_scaled.png")
         beta_list, means_data_set_list, L_list = prepare_dataset_fss_plot(df_means, "absm")
-        
         # Plot without errors (no variance data)
         plot_finite_size_scaling(beta_list, means_data_set_list, errors=None, lattice_side_list=L_list, 
                                  marker='.', cmap='tab10', xlabel=r"$(\beta - \beta_c) L^{1/\nu}$", ylabel=r"$<|\mathbf{m}|> L^{\beta / \nu}$", save_path=save_path)
+        
+        save_path = os.path.join(plot_dir, f"chi_vs_beta_different_L_scaled.png")
+        beta_list, means_data_set_list, L_list = prepare_dataset_fss_plot(df_means, "m2")
+        # Plot without errors (no variance data)
+        plot_finite_size_scaling(beta_list, means_data_set_list, errors=None, lattice_side_list=L_list, 
+                                 marker='.', cmap='tab10', xlabel=r"$(\beta - \beta_c) L^{1/\nu}$", ylabel=r"$\chi /L^{\gamma / \nu}$", save_path=save_path)
 
     except Exception as main_e:
         # Log any unexpected errors

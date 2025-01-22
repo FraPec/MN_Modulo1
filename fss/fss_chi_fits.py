@@ -27,7 +27,7 @@ if __name__ == '__main__':
         df_vars = pd.read_csv(config["paths"]["file_name_vars"])
         beta_intervals = config["settings"]["beta_min_max"] 
 
-        beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, df_vars, "chi_prime")
+        beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, "chi_prime", df_vars)
         logging.info(f"Current L list:\n{L_list}")
 
         alpha_list = []

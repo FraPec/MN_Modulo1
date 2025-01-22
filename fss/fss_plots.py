@@ -45,7 +45,7 @@ if __name__=='__main__':
         for variable, variable_latex in zip(variables_to_plot, variables_names_latex):
             save_path = os.path.join(plot_dir, f"{variable}_vs_beta_different_L.png")
             beta_list, means_data_set_list, std_devs_data_set_list, L_list = prepare_dataset_fss_plot(df_means, variable, df_vars=df_vars)
-            plot_finite_size_scaling(beta_list, means_data_set_list, errors=std_devs_data_set_list, lattice_side_list=L_list, marker='.', cmap='tab10', xlabel="beta", ylabel=variable_latex, save_path=save_path)
+            plot_finite_size_scaling(beta_list, means_data_set_list, errors=std_devs_data_set_list, lattice_side_list=L_list, marker='.', cmap='tab10', xlabel=r"$\beta$", ylabel=variable_latex, save_path=save_path)
         
     except Exception as main_e:
         # Log any unexpected errors
