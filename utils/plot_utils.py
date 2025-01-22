@@ -135,17 +135,17 @@ def plot_blocking_variance(variances, save_path, title=None, x_label="Block Size
 
     # Create the plot
     plt.figure(figsize=(10, 6))
-    plt.plot(block_sizes, variance_values, linestyle="", marker=".", markersize = 0.8)
+    plt.plot(block_sizes, variance_values, linestyle="", marker="o", markersize = 2.0)
 
     # Set logarithmic scales for x and y axes
     plt.xscale("log")
     plt.yscale("log")
 
     # Add labels, title, and legend
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+    plt.xlabel(x_label, fontsize=20)
+    plt.ylabel(y_label, fontsize=20)
     if title:
-        plt.title(title)
+        plt.title(title, fontsize=20)
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 
     # Save the plot
@@ -175,17 +175,17 @@ def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=Non
     """
     # Create the plot
     plt.figure(figsize=(10, 6)) 
-    plt.plot(blocksizes, variances, linestyle="", marker=".", markersize = 0.8)
+    plt.plot(blocksizes, variances, linestyle="", marker="o", markersize=2.0)
 
     # Set logarithmic scales for x and y axes
     plt.xscale("log")
     plt.yscale("log")
 
     # Add labels, title, and legend
-    plt.xlabel(x_label)
-    plt.ylabel(y_label)
+    plt.xlabel(x_label, fontsize=20)
+    plt.ylabel(y_label, fontsize=20)
     if title:
-        plt.title(title)
+        plt.title(title, fontsize=20)
     plt.grid(True, which="both", linestyle="--", linewidth=0.5)
 
     # Save the plot

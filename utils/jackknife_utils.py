@@ -254,14 +254,15 @@ def plot_jackknife_variances(df, plot_dir, base_name):
     """Generate and save plots for the variance data."""
     blocksizes = df["block_size"]
     
+    title = f"L = {df['L'].iloc[0]}, $\\beta$ = {df['beta'].iloc[0]}"
     # Plot for variance of U
     var_U = df["var_U"]
     save_path = os.path.join(plot_dir, f"{base_name}_var_U.png")
-    plot_jackknife_blocking_variance(var_U, blocksizes, save_path, title=None, x_label="Block Size", y_label="Variance")
+    plot_jackknife_blocking_variance(var_U, blocksizes, save_path, title=title, x_label="Block Size", y_label=r"$var(U)$")
 
     # Plot for variance of chi prime
     var_chi_prime = df["var_chi_prime"]
     save_path = os.path.join(plot_dir, f"{base_name}_var_chi_prime.png")
-    plot_jackknife_blocking_variance(var_chi_prime, blocksizes, save_path, title=None, x_label="Block Size", y_label="Variance")
+    plot_jackknife_blocking_variance(var_chi_prime, blocksizes, save_path, title=title, x_label="Block Size", y_label=r"$var(\chi')$")
 
 

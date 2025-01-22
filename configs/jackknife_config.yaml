@@ -1,17 +1,19 @@
 settings:
-  first_index: 5000
-  max_block_size_default: 1000
+  first_index: 0
+  max_block_size_default: 500
   num_cores_default: 4
   data_columns: ["L", "beta", "absm", "m2", "m4"]
-  single_block_size_default: 1000
+  single_block_size_default: 100
 
 paths:
   output_dir: "../data/jackknife_data"
   plot_dir: "../plots/jackknife_plots"
-  default_files_4_maxblock_analysis: 
-    - "../data/lattice_metrics_csv/L9/data_L9_b0.453_summary.csv"
-    - "../data/lattice_metrics_csv/L30/data_L30_b0.453_summary.csv"
+  default_files_4_maxblock_analysis:
+    - "../data/lattice_metrics_csv/L30/data_L30_b0.45253_summary.csv"
+    - "../data/lattice_metrics_csv/L30/data_L30_b0.45406_summary.csv"
+    - "../data/lattice_metrics_csv/L18/data_L18_b0.45426_summary.csv"
+    - "../data/lattice_metrics_csv/L18/data_L18_b0.45954_summary.csv"
   default_files_4_singleblock_analysis: 
-    - "../data/lattice_metrics_csv/L9/data_L9_b0.453_summary.csv"
-    - "../data/lattice_metrics_csv/L30/data_L30_b0.453_summary.csv"
+    - "../data/lattice_metrics_csv/L30/data_L30_b0.45406_summary.csv"
+    - "../data/lattice_metrics_csv/L18/data_L18_b0.45426_summary.csv"
   secondary_variables_dir: "../secondary_quantities"

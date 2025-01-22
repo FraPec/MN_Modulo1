@@ -43,13 +43,13 @@ def blocking(data, block_size):
     
     
 
-def calculate_blocking_variances(data, max_block_size, num_cores=None):
+def calculate_blocking_variances(data, min_block_size, max_block_size, num_cores=None):
     """
     Calculate variances for all block sizes up to max_block_size using parallel processing.
     """
 
     with Pool(processes=num_cores) as pool:
-        block_sizes = range(1, max_block_size + 1)
+        block_sizes = range(min_block_size, max_block_size + 1)
         results = pool.starmap(blocking, [(data, bs) for bs in block_sizes])
     return dict(zip(block_sizes, results))
 
@@ -93,7 +93,7 @@ def check_existing_blocking_files(blocking_csv, plot_files):
 
 
 
-def process_csv_for_blocking(input_file, output_dir, plot_dir, max_block_size, num_cores):
+def process_csv_for_blocking(input_file, output_dir, plot_dir, min_block_size, max_block_size, num_cores, plot=False):
     """
     Process a single CSV file to apply blocking analysis and save results.
 
@@ -101,6 +101,7 @@ def process_csv_for_blocking(input_file, output_dir, plot_dir, max_block_size, n
         input_file (str): Path to the input CSV file.
         output_dir (str): Directory to save blocking results.
         plot_dir (str): Directory to save blocking plots.
+        min_block_size (int): Minimum block size for the analysis.
         max_block_size (int): Maximum block size for the analysis.
         num_cores (int): Number of CPU cores to use for parallel processing.
 
@@ -142,7 +143,7 @@ def process_csv_for_blocking(input_file, output_dir, plot_dir, max_block_size, n
         return
 
     # Prepare results storage
-    results = {"block_size": range(1, max_block_size + 1)}
+    results = {"block_size": range(min_block_size, max_block_size + 1)}
 
     # Process each column for blocking analysis
     columns_to_process = ["mx", "my", "epsilon", "absm", "m2", "m4"]
@@ -156,7 +157,7 @@ def process_csv_for_blocking(input_file, output_dir, plot_dir, max_block_size, n
             column_data = data[column].to_numpy()
             logging.info(f"Performing blocking analysis for column: {column}")
             try:
-                variances = calculate_blocking_variances(column_data, max_block_size, num_cores)
+                variances = calculate_blocking_variances(column_data, min_block_size, max_block_size, num_cores)
                 results[f"var_{column}"] = list(variances.values())
             except Exception as e:
                 logging.error(f"Error during blocking analysis for {column}: {e}")
@@ -172,17 +173,19 @@ def process_csv_for_blocking(input_file, output_dir, plot_dir, max_block_size, n
                 continue
 
         # Generate plot if required
-        if user_choices["replot"]:
-            try:
-                plot_file = os.path.join(file_plot_dir, f"L{lattice_side}_beta{beta}_{column}_blocking_{max_block_size}.png")
-                plot_blocking_variance(
-                    variances=variances,
-                    save_path=plot_file,
-                    title=f"Blocking Analysis for {column} (L={lattice_side}, β={beta}, max_block_size={max_block_size})"
-                )
-                logging.info(f"Plot saved: {plot_file}")
-            except Exception as e:
-                logging.error(f"Error generating plot for {column}: {e}")
+        if plot:
+            if user_choices["replot"]:
+                try:
+                    plot_file = os.path.join(file_plot_dir, f"L{lattice_side}_beta{beta}_{column}_blocking_{max_block_size}.png")
+                    plot_blocking_variance(
+                        variances=variances,
+                        save_path=plot_file, 
+                        title=f"L = {lattice_side}, $\\beta$ = {beta}",
+                        y_label=f"var({column})"
+                    )
+                    logging.info(f"Plot saved: {plot_file}")
+                except Exception as e:
+                    logging.error(f"Error generating plot for {column}: {e}")
 
     # Save results to CSV if recomputing blocking
     if user_choices["recompute_blocking"]:

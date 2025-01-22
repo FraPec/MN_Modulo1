@@ -350,6 +350,21 @@ def get_user_inputs_for_blocking_analysis(config_path="../configs/blocking_confi
             break
         except ValueError:
             print("[ERROR] Invalid input. Please enter a number.")
+    
+    # Ask for minimum block size
+    min_block_size_default = defaults.get("min_block_size_default", None)
+    while True:
+        min_block_size_input = input(
+            f"\nEnter the minimum block size (Default: {min_block_size_default}): "
+        ).strip()
+        if not min_block_size_input:
+            min_block_size = min_block_size_default
+            break
+        try:
+            min_block_size = int(min_block_size_input)
+            break
+        except ValueError:
+            print("[ERROR] Invalid input. Please enter a number.")
 
     # Ask for number of cores
     num_cores_default = defaults.get("num_cores_default", None)
@@ -386,6 +401,7 @@ def get_user_inputs_for_blocking_analysis(config_path="../configs/blocking_confi
     print("\n===== Summary of Inputs =====")
     print(f"Input Paths: {input_paths}")
     print(f"Max Block Size: {max_block_size}")
+    print(f"Min Block Size: {min_block_size}")
     print(f"Number of Cores: {num_cores}")
     print(f"Data output directory: {data_dir}")
     print(f"Data output directory: {plot_dir}")
@@ -399,6 +415,7 @@ def get_user_inputs_for_blocking_analysis(config_path="../configs/blocking_confi
     return {
         "input_paths": input_paths,
         "max_block_size": max_block_size,
+        "min_block_size": min_block_size,
         "num_cores": num_cores,
         "data_dir": data_dir,
         "plot_dir": plot_dir,
