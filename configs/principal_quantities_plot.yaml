@@ -1,0 +1,8 @@
+paths:
+  file_name_means: "../data/principal_quantities/principal_quantities_means.csv"
+  file_name_vars: "../data/principal_quantities/principal_quantities_variances.csv"
+  plot_dir: "../plots/principal_quantities_plots"
+
+settings: 
+  variables_to_plot: ["mx_mean", "my_mean", "epsilon_mean", "absm_mean", "chi"]
+  variables_names_latex: ["$10^3 \\times \\langle m_x \\rangle$", "$10^3 \\times \\langle m_y \\rangle$", "$\\langle \\epsilon \\rangle$", "$\\langle |\\mathbf{m}| \\rangle$", "$\\chi$"]

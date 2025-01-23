@@ -193,7 +193,7 @@ def plot_jackknife_blocking_variance(variances, blocksizes, save_path, title=Non
     plt.close()
 
 
-def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=None, marker='o', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$", save_path=False):
+def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=None, marker='o', linestyle='--', cmap='tab10', xlabel="beta", ylabel=r"$\chi'$", save_path=False, x_interval=None):
     """ 
     Plots multiple datasets, one for each lattice side, with error bars, distinct colors, and markers.
     
@@ -219,9 +219,9 @@ def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=
         if lattice_side_list is not None:
             label = f'L {lattice_side_list[i]}'
         if y_err is not None:
-            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle='--', color=colors[i], label=label)
+            plt.errorbar(x, y, yerr=y_err, fmt=marker, ecolor=colors[i], linestyle=linestyle, color=colors[i], label=label)
         else:
-            plt.plot(x, y, marker=marker, linestyle='--', color=colors[i], label=label)
+            plt.plot(x, y, marker=marker, linestyle=linestyle, color=colors[i], label=label)
 
     if lattice_side_list is not None:
         plt.legend(fontsize=15)
@@ -230,6 +230,8 @@ def plot_finite_size_scaling(x_values, y_values, errors=None, lattice_side_list=
     plt.xlabel(xlabel, fontsize=20)
     plt.ylabel(ylabel, fontsize=20)
     plt.grid()
+    if x_interval is not None:
+        plt.xlim((x_interval[0], x_interval[1]))
     if save_path:
         plt.savefig(save_path, dpi=300)
     plt.close()

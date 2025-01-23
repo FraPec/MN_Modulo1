@@ -26,6 +26,8 @@ def prepare_dataset_fss_plot(df_means, variable_name, df_vars=None):
     
     for L in L_list:
         if df_vars is not None:
+            if "_mean" in variable_name:
+                variable_name = variable_name.replace("_mean", "").strip()
             df_vars_sorted_b = df_vars.sort_values(by='beta')
             std_devs_data_set_list.append(np.sqrt(df_vars_sorted_b[df_vars_sorted_b["L"] == L][f"var_{variable_name}"].values))
         means_data_set_list.append(df_means_sorted_b[df_means_sorted_b["L"] == L][f"{variable_name}_mean"].values)
