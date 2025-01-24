@@ -13,6 +13,6 @@ settings:
   scaled_variables_names_latex: ["U", "$\\chi' / L^{\\gamma/\\nu}$", "$ C / L^{\\alpha / \\nu}$"] #, "$<{|\\mathbf{m}|}>L^{\\beta/\\nu}$"]
 
 critical_values:
-  nu: 0.66184
-  gamma: 1.315
-  beta_c: 0.45426
+  nu: 0.73
+  gamma: 1.45
+  beta_c: 0.4545
